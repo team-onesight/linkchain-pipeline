@@ -1,0 +1,21 @@
+name: 'Assign Random Reviewers' # 워크플로우 이름
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review] # PR 생성, 재개, 리뷰 준비 시 트리거
+
+jobs:
+  add_reviewers:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # PR에 리뷰어를 할당하기 위해 필요
+    
+    steps:
+      - name: 🏃 PR 작성자를 제외하고 랜덤 리뷰어 할당
+        uses: ihs7/action-reviewer-roulette@v1 # 사용할 액션, kentaro-m/auto-assign-action도 가능
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          number-of-reviewers: 2
+          
+          # 🚨 ${{ github.actor }}를 사용하여 PR 작성자를 제외합니다.
+          excluded-reviewers: ${{ github.actor }}
