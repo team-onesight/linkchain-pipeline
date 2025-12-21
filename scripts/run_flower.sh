@@ -2,18 +2,14 @@
 set -e
 cd "$(dirname "$0")"
 
-echo "=== [1/3] Cleaning up existing containers and orphans ==="
-docker-compose \
-  -f ../docker-compose-prod.yaml \
-  --env-file ../.env.prod \
-  down --remove-orphans
+echo "=== Stop Docker Container (flower) ==="
+docker ps -a -q --filter "name=flower" | xargs -r sudo docker stop || true
+echo "=== Remove Docker Container (flower) ==="
+docker ps -a -q --filter "name=flower" | xargs -r sudo docker rm || true
 
-echo "=== [2/3] Pruning dangling images and containers ==="
-docker container prune -f
-
-echo "=== [3/3] Starting Airflow Webserver (Rebuild) ==="
+echo "=== Ensuring Airflow Flower is up and running ==="
 docker-compose \
   -f ../docker-compose-prod.yaml \
   --env-file ../.env.prod \
   --profile monitoring \
-  up -d --build --force-recreate
+  up -d --remove-orphans

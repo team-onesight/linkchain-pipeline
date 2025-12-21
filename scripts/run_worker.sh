@@ -2,18 +2,20 @@
 set -e
 cd "$(dirname "$0")"
 
-echo "=== [1/3] Cleaning up existing containers and orphans ==="
-docker-compose \
-  -f ../docker-compose-prod.yaml \
-  --env-file ../.env.prod \
-  down --remove-orphans
+echo "=== Stop Docker Container (worker, init) ==="
+docker ps -a -q --filter "name=airflow-worker" --filter "name=airflow-init" | xargs -r sudo docker stop || true
+echo "=== Remove Docker Container (worker, init) ==="
+docker ps -a -q --filter "name=airflow-worker" --filter "name=airflow-init" | xargs -r sudo docker rm || true
 
-echo "=== [2/3] Pruning dangling images and containers ==="
-docker container prune -f
 
-echo "=== [3/3] Starting Airflow Webserver (Rebuild) ==="
+export WORKER_PORT=${1:-8793}
+# shellcheck disable=SC2155
+export SERVER_IP=$(hostname -I | awk '{print $1}')
+export AIRFLOW__CORE__HOSTNAME=$SERVER_IP
+echo "=== Starting Airflow Worker with Fixed IP: $SERVER_IP (port: $WORKER_PORT) ==="
+
 docker-compose \
   -f ../docker-compose-prod.yaml \
   --env-file ../.env.prod \
   --profile worker \
-  up -d --build --force-recreate
+  up -d --force-recreate
