@@ -5,12 +5,14 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "apache-airflow-providers-amazon>=9.18.1",
     "pandas>=2.3.3",
 ]
 
 [dependency-groups]
 
 dev = [
+    "ansible>=13.1.0",
     "apache-airflow==3.1.2",
     "pytest>=9.0.2",
     "pytest-mock>=3.15.1",

@@ -1,0 +1,18 @@
+plugin: amazon.aws.aws_ec2
+regions:
+  - ap-northeast-2
+
+filters:
+  instance-state-name: running
+  tag:Team: de7-team1
+
+hostnames:
+  - private-ip-address
+
+groups:
+  group_airflow: "'IsAirflow' in tags and tags['IsAirflow'] == 'true'"
+  group_webserver: "'IsWebserver' in tags and tags['IsWebserver'] == 'true'"
+  group_worker: "'IsWorker' in tags and tags['IsWorker'] == 'true'"
+  group_scheduler: "'IsScheduler' in tags and tags['IsScheduler'] == 'true'"
+  group_trigger: "'IsTriggerer' in tags and tags['IsTriggerer'] == 'true'"
+  group_dagprocessor: "'IsDagProcessor' in tags and tags['IsDagProcessor'] == 'true'"
