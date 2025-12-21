@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+docker-compose \
+  -f ../../docker-compose.yaml \
+  --env-file ../../.env.local \
+  up -d --build --force-recreate --remove-orphans

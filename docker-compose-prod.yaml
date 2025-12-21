@@ -1,0 +1,130 @@
+version: '3.9'
+name: linkchain-airflow-prod
+
+x-airflow-common:
+  &airflow-common
+  build: .
+  env_file:
+    - .env.prod
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW__DATABASE__SQL_ALCHEMY_CONN}
+    AIRFLOW__CELERY__RESULT_BACKEND: ${AIRFLOW__CELERY__RESULT_BACKEND}
+    AIRFLOW__CELERY__BROKER_URL: ${AIRFLOW__CELERY__BROKER_URL}
+    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY}
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+
+    # [중요] S3 Remote Logging 설정 (멀티 서버 필수)
+    AIRFLOW__LOGGING__REMOTE_LOGGING: ${AIRFLOW__LOGGING__REMOTE_LOGGING}
+    AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER: ${AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER}
+    AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID: ${AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID}
+
+    _PIP_ADDITIONAL_REQUIREMENTS: ''
+
+  volumes:
+    - ${AIRFLOW_PROJ_DIR:-.}/src/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-.}/src/logs:/opt/airflow/logs
+    - ${AIRFLOW_PROJ_DIR:-.}/src/config:/opt/airflow/config
+    - ${AIRFLOW_PROJ_DIR:-.}/src/plugins:/opt/airflow/plugins
+
+  user: "${AIRFLOW_UID:-50000}:0"
+
+services:
+  # === Webserver ===
+  airflow-apiserver:
+    <<: *airflow-common
+    profiles: [ webserver ]
+    command: api-server
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://localhost:8080/api/v2/version" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  # === Scheduler ===
+  airflow-scheduler:
+    <<: *airflow-common
+    profiles: [ scheduler ]
+    command: scheduler
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://localhost:8974/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-dag-processor:
+    <<: *airflow-common
+    profiles: [ scheduler ]
+    command: dag-processor
+    healthcheck:
+      test: [ "CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"' ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-triggerer:
+    <<: *airflow-common
+    profiles: [ scheduler ]
+    command: triggerer
+    healthcheck:
+      test: [ "CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"' ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  # === Worker ===
+  airflow-worker:
+    <<: *airflow-common
+    profiles: [ worker ]
+    command: celery worker
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    environment:
+      <<: *airflow-common-env
+      DUMB_INIT_SETSID: "0"
+    restart: always
+
+  # === Initializer ===
+  airflow-init:
+    <<: *airflow-common
+    profiles: [ init ]
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        echo "Initialize Airflow..."
+        mkdir -p /opt/airflow/{logs,dags,plugins,config}
+        chown -R "${AIRFLOW_UID}:0" /opt/airflow/{logs,dags,plugins,config}
+        
+        airflow db migrate
+        airflow users create \
+          --username "${_AIRFLOW_WWW_USER_USERNAME:-airflow}" \
+          --firstname "Admin" \
+          --lastname "User" \
+          --role Admin \
+          --email "admin@example.com" \
+          --password "${_AIRFLOW_WWW_USER_PASSWORD:-airflow}" || true
+    user: "0:0"
+
+  flower:
+    <<: *airflow-common
+    profiles: [ monitoring ]
+    command: celery flower
+    ports:
+      - "5555:5555"
+    restart: always
