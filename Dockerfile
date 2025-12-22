@@ -1,6 +1,11 @@
 FROM apache/airflow:3.1.4-python3.12
 
-COPY requirements.txt .
+USER root
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml .
+
+RUN uv pip install --system -r pyproject.toml
+
+USER airflow
