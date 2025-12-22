@@ -1,3 +1,20 @@
-.env
-logs
-config
+### Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+### IDEA
+vscode/
+.idea/
+
+### Env files
+.venv
+src/config/airflow_prod.cfg
+.env.prod
+
+### Airflow
+src/logs/
+
+
+*.iml

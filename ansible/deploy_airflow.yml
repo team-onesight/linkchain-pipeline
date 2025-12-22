@@ -1,0 +1,88 @@
+---
+- name: "Step 1a: Fix Node Permissions"
+  hosts: group_airflow
+  become: yes
+  vars:
+    project_path: "/home/ubuntu/linkchain-pipeline"
+
+  tasks:
+    - name: Ensure project directory ownership is ubuntu
+      ansible.builtin.file:
+        path: "{{ project_path }}"
+        owner: ubuntu
+        group: ubuntu
+        recurse: yes
+        state: directory
+      ignore_errors: yes
+
+- name: "Step 1b: Sync Code"
+  hosts: group_airflow
+  become: yes
+  become_user: ubuntu
+  vars:
+    project_path: "/home/ubuntu/linkchain-pipeline"
+    repo_url: "https://github.com/team-onesight/linkchain-pipeline.git"
+    git_branch: "main"
+
+  tasks:
+    - name: Add project directory to git safe.directory
+      ansible.builtin.command:
+        cmd: "git config --global --add safe.directory {{ project_path }}"
+
+    - name: Pull latest code from Git
+      ansible.builtin.git:
+        repo: "{{ repo_url }}"
+        dest: "{{ project_path }}"
+        version: "{{ git_branch }}"
+        force: yes
+        accept_hostkey: yes
+
+- name: "Step 2: Start Airflow Components"
+  hosts: group_airflow
+  become: yes
+  become_user: ubuntu
+  vars:
+    project_path: "/home/ubuntu/linkchain-pipeline"
+    scripts_path: "{{ project_path }}/scripts"
+
+  tasks:
+    - name: Run Webserver
+      ansible.builtin.shell:
+        cmd: "sh {{ scripts_path }}/run_webserver.sh"
+        chdir: "{{ project_path }}"
+      when: "'group_webserver' in group_names"
+      ignore_errors: yes
+
+    - name: Run Scheduler
+      ansible.builtin.shell:
+        cmd: "sh {{ scripts_path }}/run_scheduler.sh"
+        chdir: "{{ project_path }}"
+      when: "'group_scheduler' in group_names"
+      ignore_errors: yes
+
+    - name: Run Worker
+      ansible.builtin.shell:
+        cmd: "sh {{ scripts_path }}/run_worker.sh 8793"
+        chdir: "{{ project_path }}"
+      when: "'group_worker' in group_names"
+      ignore_errors: yes
+
+    - name: Run DAG Processor
+      ansible.builtin.shell:
+        cmd: "sh {{ scripts_path }}/run_dag_processor.sh"
+        chdir: "{{ project_path }}"
+      when: "'group_dagprocessor' in group_names"
+      ignore_errors: yes
+
+    - name: Run Triggerer
+      ansible.builtin.shell:
+        cmd: "sh {{ scripts_path }}/run_triggerer.sh"
+        chdir: "{{ project_path }}"
+      when: "'group_trigger' in group_names"
+      ignore_errors: yes
+
+#    - name: Run Flower
+#      ansible.builtin.shell:
+#        cmd: "sh {{ scripts_path }}/run_flower.sh"
+#        chdir: "{{ project_path }}"
+#      when: "'group_webserver' in group_names"
