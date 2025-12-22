@@ -97,12 +97,6 @@ jobs:
           mkdir -p "$AIRFLOW_HOME"
           uv run airflow db migrate
 
-      # CI용 Airflow Variables
-      - name: Set dummy Airflow variables
-        run: |
-          uv run airflow variables set ENV ci
-          uv run airflow variables set DUMMY test
-
       # Ruff (DAG, plugin lint)
       - name: Ruff (DAG only)
         run: uv run ruff check src/dags src/plugins
