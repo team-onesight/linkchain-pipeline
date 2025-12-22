@@ -7,13 +7,13 @@ on:
     paths:
       - src/**
       - tests/**
-      - .github/workflows/ci.yml
+      - .github/workflows/airflow-ci.yml
   push:
     branches: [ "main", "dev" ]
     paths:
       - src/**
       - tests/**
-      - .github/workflows/ci.yml
+      - github/workflows/airflow-ci.yml
 
 jobs:
   detect-dag-changes:
