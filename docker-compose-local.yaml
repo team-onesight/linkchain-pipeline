@@ -44,11 +44,11 @@
 #
 # Feel free to modify this file to suit your needs.
 ---
-name: linkchain-airflow-dev
+name: linkchain-airflow-local
 x-airflow-common:
   &airflow-common
   # In order to add custom dependencies or upgrade provider distributions you can use your extended image.
-  # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
+  # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose-local.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
   build: .
   env_file:
@@ -123,7 +123,7 @@ services:
     ports:
       - "8080:8080"
     healthcheck:
-      test: [ "CMD", "curl", "--fail", "http://localhost:8080/api/v2/version" ]
+      test: [ "CMD", "curl", "--fail", "http://localhost:8080/api/v2/monitor/health" ]
       interval: 30s
       timeout: 10s
       retries: 5
