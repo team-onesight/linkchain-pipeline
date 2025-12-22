@@ -13,7 +13,12 @@ dependencies = [
 
 dev = [
     "ansible>=13.1.0",
-    "apache-airflow==3.1.4",
+    "apache-airflow==3.1.2",
     "pytest>=9.0.2",
     "pytest-mock>=3.15.1",
+]
+
+[tool.uv.workspace]
+members = [
+    "test",
 ]
