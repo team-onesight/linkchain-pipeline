@@ -1,0 +1,84 @@
+name: Airflow DAG CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ "main", "dev" ]
+    paths:
+      - src/**
+      - tests/**
+      - .github/workflows/airflow-ci.yml
+  push:
+    branches: [ "main", "dev" ]
+    paths:
+      - src/**
+      - tests/**
+      - github/workflows/airflow-ci.yml
+
+jobs:
+
+  airflow-ci:
+    runs-on: ubuntu-latest
+
+    env:
+      # Airflow 기본 설정
+      AIRFLOW_HOME: ${{ github.workspace }}/airflow
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__UNIT_TEST_MODE: "True"
+      AIRFLOW__CORE__DAGS_FOLDER: ${{ github.workspace }}/src/dags
+
+      # DB / 보안
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////${{ github.workspace }}/airflow/airflow.db
+
+      # Python import path
+      PYTHONPATH: ${{ github.workspace }}/src:${{ github.workspace }}/src/plugins
+    
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # AIRFLOW__CORE__FERNET_KEY load
+      - name: Load env from .env.local
+        run: |
+          if [ -f .env.local ]; then
+            grep -v '^#' .env.local | grep -v '^$' >> $GITHUB_ENV
+          fi
+
+      # uv 설치
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+
+      # Python 설치
+      - name: Install Python 3.12
+        run: uv python install 3.12
+
+      # pyproject 환경 sync
+      - name: Sync dependencies (dev 포함)
+        run: uv sync --dev
+
+      # plugins/** editable install
+      - name: Install project code (editable)
+        run: uv pip install -e .
+
+      # Airflow DB 초기화
+      - name: Init Airflow DB
+        run: |
+          mkdir -p "$AIRFLOW_HOME"
+          uv run airflow db migrate
+
+      # Ruff (DAG, plugin lint)
+      - name: Ruff (DAG only)
+        run: uv run ruff check src/dags src/plugins
+
+      # Airflow DAG import test
+      - name: Airflow DAG import check
+        run: uv run airflow dags list > /dev/null
+
+      # Pytest DAG tests
+      - name: Pytest DAG tests
+        run: uv run pytest tests/dags -v
