@@ -20,7 +20,7 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
                          schema=schema,
                          *args, **kwargs)
 
-    def query(self, sql: str) -> list:
+    def command(self, sql: str) -> list:
         """
         SQL command를 실행합니다.
         
