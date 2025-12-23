@@ -1,5 +1,6 @@
 import logging
 from typing import List
+
 import aiohttp
 from bs4 import BeautifulSoup
 
@@ -15,7 +16,7 @@ class NamuWikiCrawler:
     RECENT_CHANGES_URL = "https://namu.wiki/RecentChanges"
 
     HEADERS = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"  # noqa: E501
     }
 
     CSS_SELECTOR = "div.ajtzPLeO.b8dd3F0y > a"

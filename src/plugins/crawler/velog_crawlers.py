@@ -5,7 +5,6 @@ from typing import List, Optional
 
 import aiohttp
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +23,7 @@ class VelogCrawler:
     """Velog 게시물 수집을 위한 비동기 크롤러 클래스"""
 
     BASE_HEADERS = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"  # noqa: E501
     }
 
     _TRENDING_QUERY = """

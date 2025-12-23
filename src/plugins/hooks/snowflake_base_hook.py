@@ -11,19 +11,19 @@ class CustomSnowflakeBaseHook(ABC, SnowflakeHook):
     :param snowflake_conn_id: The Airflow connection ID to use for Snowflake.
     :param database: The database to use for the session.
     :param schema: The schema to use for the session.
-    """
+    """  # noqa: E501
 
     conn: SnowflakeConnection = None
 
     def __init__(
         self,
+        *args,
         snowflake_conn_id: str = "snowflake_conn",
         database: str = None,
         schema: str = None,
-        *args,
         **kwargs,
     ):
-        super().__init__(snowflake_conn_id=snowflake_conn_id, *args, **kwargs)
+        super().__init__(*args, snowflake_conn_id=snowflake_conn_id, **kwargs)
         self.database = database
         self.schema = schema
 

@@ -15,7 +15,7 @@ def flat_map(func: Callable | None, iterable: Iterable):
         return
 
     if func is None:
-        func = lambda x: x
+        func = lambda x: x  # noqa: E731
 
     for item in iterable:
         result = func(item)

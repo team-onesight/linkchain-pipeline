@@ -1,6 +1,6 @@
-import boto3
 import os
 
+import boto3
 from airflow.sdk import BaseHook
 
 
@@ -12,7 +12,7 @@ class S3Hook(BaseHook):
     :type aws_conn_id: str
     """
 
-    def __init__(self, aws_conn_id: str = None, *args, **kwargs) -> None:
+    def __init__(self, *args, aws_conn_id: str = None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.aws_conn_id = aws_conn_id
         self.client = None

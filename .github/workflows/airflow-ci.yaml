@@ -16,26 +16,8 @@ on:
       - github/workflows/airflow-ci.yml
 
 jobs:
-  detect-dag-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      dags_changed: ${{ steps.filter.outputs.dags }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            dags:
-              - "src/dags/**"
-              - "src/plugins/common/**"
-              - "tests/dags/**"
-              - "pyproject.toml"
 
   airflow-ci:
-    needs: detect-dag-changes
-    # if: needs.detect-dag-changes.outputs.dags_changed == 'true'
     runs-on: ubuntu-latest
 
     env:
@@ -78,14 +60,6 @@ jobs:
       # pyproject 환경 sync
       - name: Sync dependencies (dev 포함)
         run: uv sync --dev
-
-      # debug용 path import 확인
-      - name: Debug sys.path
-        run: |
-          uv run python - <<EOF
-          import sys
-          print("\n".join(sys.path))
-          EOF
 
       # plugins/** editable install
       - name: Install project code (editable)
