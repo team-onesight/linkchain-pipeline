@@ -1,6 +1,8 @@
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from snowflake.connector import SnowflakeConnection
-class CustomSnowflakeBaseHook(SnowflakeHook):
+from abc import ABC
+
+class CustomSnowflakeBaseHook(ABC, SnowflakeHook):
     """
     CustomSnowflakeBaseHook은 snowflake 데이터베이스에 연결하기 위한 커스텀 베이스 훅입니다.
         
