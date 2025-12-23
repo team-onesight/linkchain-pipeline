@@ -11,11 +11,8 @@ def test_dag_import_and_ready():
         include_examples=False,
     )
 
-    assert dagbag.import_errors == {}, (
-        f"DAG import errors: {dagbag.import_errors}"
-    )
+    assert dagbag.import_errors == {}, f"DAG import errors: {dagbag.import_errors}"
 
     for dag_id, dag in dagbag.dags.items():
         assert dag.dag_id == dag_id
-        # CI에서 가장 많이 터지는 설정 실수 방지
         assert dag.catchup is False

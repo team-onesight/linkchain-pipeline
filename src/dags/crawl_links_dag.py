@@ -125,79 +125,68 @@ def _insert_crawled_links_to_snowflake(
     **kwargs,
 ):
     """
-    Save crawled links to Snowflake DWH
-    :param source_task_id: up-stream task ID that provides URLs through XCom (return_value)
-    :type source_task_id:
-    :param conn_id:
-    :type conn_id:
-    :param kwargs:
-    :type kwargs:
-    :return:
-    :rtype:
+    insert Crawled Links not Duplicated to Snowflake Table (URL_CRAWLED) with LINK_ID(hash)
+    though MERGE INTO Query
+
+    if there is no data or urls(flat_map(data)), raise AirflowSkipException
+    if there is already existing link, update the updated_at column
+
+    expected: insert urls from XCom of source_task_id to Snowflake without duplication & hashing id
+
+    :param source_task_id: upstream task id which returns crawled links list
+    :param conn_id: snowflake connection id
+    :param kwargs: required by PythonOperator
     """
     ti = kwargs["ti"]
+
     raw_data = ti.xcom_pull(task_ids=source_task_id, key="return_value")
+    if not raw_data:
+        raise AirflowSkipException("No data.")
 
     urls = set(flat_map(None, raw_data))
-
     if not urls:
-        logger.warning(f"[{source_task_id}] No URLs to save.")
-        raise AirflowSkipException("No URLs to save.")
+        raise AirflowSkipException("No URLs.")
 
-    data_to_insert = []
-    for url in urls:
-        if url and isinstance(url, str):
-            link_id = get_uuid_hash(url)
-            data_to_insert.append((link_id, url))
+    data_to_insert = [
+        (get_uuid_hash(url), url) for url in urls if url and isinstance(url, str)
+    ]
 
-    if not data_to_insert:
-        raise AirflowSkipException("No valid URLs found after processing.")
+    safe_task_id = source_task_id.replace(".", "_")
+    database = "LINKCHAIN"
+    schema = "RAW_DATA"
+    target_table = f"{database}.{schema}.URL_CRAWLED"
+    temp_table = f"{database}.{schema}.link_temp_{safe_task_id}_{uuid.uuid4().hex[:8]}"
+
+    create_sql = f"""
+        CREATE TEMPORARY TABLE IF NOT EXISTS {temp_table} (
+            link_id     VARCHAR,
+            url         VARCHAR(2048),
+            created_at  TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP
+        )
+    """
+
+    insert_sql = f"INSERT INTO {temp_table} (link_id, url) VALUES (%s, %s)"
+
+    merge_sql = f"""
+        MERGE INTO {target_table} AS target
+        USING {temp_table} AS source
+        ON target.link_id = source.link_id
+        WHEN MATCHED THEN
+            UPDATE SET target.updated_at = source.created_at
+        WHEN NOT MATCHED THEN
+            INSERT (link_id, url, created_at)
+            VALUES (source.link_id, source.url, source.created_at)
+    """
 
     hook = SnowflakeCommandHook(snowflake_conn_id=conn_id)
-    target_table = "URL_CRAWLED"
-    temp_table = f"link_temp_{source_task_id}_{uuid.uuid4().hex[:8]}"
 
-    try:
-        logger.info(f"Creating temp table: {temp_table}")
-        create_temp_sql = f"""
-            CREATE TEMPORARY TABLE IF NOT EXISTS {temp_table} (
-                link_id     VARCHAR,
-                url         VARCHAR(2048),
-                created_at  TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP
-            )
-        """
-        hook.run(create_temp_sql)
-
-        logger.info(f"Inserting {len(data_to_insert)} rows into {temp_table}")
-        hook.insert_rows(
-            table=temp_table,
-            rows=data_to_insert,
-            target_fields=["link_id", "url"],
-        )
-
-        merge_sql = f"""
-            MERGE INTO {target_table} AS target
-            USING {temp_table} AS source
-            ON target.link_id = source.link_id
-
-            WHEN MATCHED THEN
-                UPDATE SET 
-                    target.updated_at = source.created_at
-
-            WHEN NOT MATCHED THEN
-                INSERT (link_id, url, created_at, updated_at)
-                VALUES (source.link_id, source.url, source.created_at, source.created_at)
-        """
-
-        hook.run(merge_sql)
-        logger.info(f"MERGE completed for {target_table}")
-
-    except Exception as e:
-        logger.error(f"Snowflake Error: {e}")
-        raise
-
-    finally:
-        hook.run(f"DROP TABLE IF EXISTS {temp_table}")
+    hook.command_upsert_transaction(
+        create_temp_table_sql=create_sql,
+        insert_sql=insert_sql,
+        merge_sql=merge_sql,
+        data=data_to_insert,
+        temp_table_name=temp_table,
+    )
 
 
 @dc.dataclass(unsafe_hash=True)
@@ -221,7 +210,7 @@ crawler_configs: Iterable[CrawlerConfig] = [
 
 with DAG(
     dag_id="crawl_links_dag",
-    schedule="@once",
+    schedule="@hourly",
     start_date=None,
     catchup=False,
 ) as dag:
