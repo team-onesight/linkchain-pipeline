@@ -11,10 +11,10 @@ from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import DAG, TaskGroup, TriggerRule, Variable
 from common.hash_utils import get_uuid_hash
 from common.iterable_utils import flat_map
-from crawlers.namuwiki_crawlers import NamuWikiCrawler
-from crawlers.naver_news_crawlers import NaverNewsCrawler
-from crawlers.velog_crawlers import VelogCrawler, VelogPostType, VelogTrendingTimeframe
-from crawlers.youtube_crawlers import crawl_channels
+from crawlers.namuwiki_crawler import NamuWikiCrawler
+from crawlers.naver_news_crawler import NaverNewsCrawler
+from crawlers.velog_crawler import VelogCrawler, VelogPostType, VelogTrendingTimeframe
+from crawlers.youtube_crawler import crawl_channels
 from hooks.snowflake_command_hook import SnowflakeCommandHook
 
 logger = logging.getLogger(__name__)
