@@ -4,8 +4,9 @@ USER root
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-COPY pyproject.toml .
+COPY --chown=airflow:0 pyproject.toml .
 
-RUN uv pip install --system -r pyproject.toml
+RUN uv pip compile pyproject.toml -o requirements.txt && \
+    uv pip install --python $(which python) -r requirements.txt
 
 USER airflow
