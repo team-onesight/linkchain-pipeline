@@ -14,4 +14,4 @@ docker-compose \
   -f ../docker-compose-prod.yaml \
   --env-file ../.env.prod \
   --profile webserver \
-  up -d --remove-orphans
+  up -d --remove-orphans --build

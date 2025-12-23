@@ -15,4 +15,4 @@ docker-compose \
   -f ../docker-compose-prod.yaml \
   --env-file ../.env.prod \
   --profile scheduler \
-  up -d --remove-orphans
+  up -d --remove-orphans --build
