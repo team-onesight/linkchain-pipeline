@@ -1,6 +1,7 @@
-import logging
 import asyncio
+import logging
 from typing import List, Tuple
+
 import aiohttp
 from bs4 import BeautifulSoup
 

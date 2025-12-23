@@ -17,10 +17,10 @@ class CustomSnowflakeBaseHook(ABC, SnowflakeHook):
 
     def __init__(
         self,
+        *args,
         snowflake_conn_id: str = "snowflake_conn",
         database: str = None,
         schema: str = None,
-        *args,
         **kwargs,
     ):
         super().__init__(snowflake_conn_id=snowflake_conn_id, *args, **kwargs)

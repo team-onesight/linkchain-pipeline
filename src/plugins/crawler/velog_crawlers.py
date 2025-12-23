@@ -5,7 +5,6 @@ from typing import List, Optional
 
 import aiohttp
 
-
 logger = logging.getLogger(__name__)
 
 

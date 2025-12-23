@@ -1,5 +1,6 @@
 import logging
 from typing import List
+
 import aiohttp
 from bs4 import BeautifulSoup
 
