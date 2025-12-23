@@ -1,6 +1,8 @@
-from airflow.hooks.base import BaseHook
 import boto3
 import os
+
+from airflow.sdk import BaseHook
+
 
 class S3Hook(BaseHook):
     """
@@ -9,6 +11,7 @@ class S3Hook(BaseHook):
     :param aws_conn_id: airflow connection의 id. 없다면, 환경변수를 사용합니다.
     :type aws_conn_id: str
     """
+
     def __init__(self, aws_conn_id: str = None, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.aws_conn_id = aws_conn_id
@@ -27,7 +30,7 @@ class S3Hook(BaseHook):
                 "s3",
                 aws_access_key_id=connection.login,
                 aws_secret_access_key=connection.password,
-                region_name=connection.extra_dejson.get('region_name')
+                region_name=connection.extra_dejson.get("region_name"),
             )
         else:
             self.client = boto3.client(
@@ -37,4 +40,3 @@ class S3Hook(BaseHook):
                 region_name=os.environ.get("AWS_DEFAULT_REGION"),
             )
         return self.client
-

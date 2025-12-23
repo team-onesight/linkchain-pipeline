@@ -1,7 +1,6 @@
 from airflow import DAG
-from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.standard.operators.empty import EmptyOperator
-
+from airflow.providers.standard.operators.python import PythonOperator
 from common.print_utils import print_hello
 
 with DAG(
