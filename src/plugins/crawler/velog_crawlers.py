@@ -112,7 +112,7 @@ class VelogCrawler:
         limit = 20
 
         logger.info(
-            f"--- Velog Trending [{timeframe.value}] 수집 시작 (목표: {max_limit}개) ---"
+            f"--- Velog Trending [{timeframe.value}] 수집 시작 (목표: {max_limit}개) ---"  # noqa: E501
         )
 
         while len(collected_urls) < max_limit:

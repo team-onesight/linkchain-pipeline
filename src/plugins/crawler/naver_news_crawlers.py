@@ -44,7 +44,7 @@ class NaverNewsCrawler:
 
             if not elements:
                 logger.warning(
-                    f"[Zero] Section {section_id}: 요소를 찾을 수 없습니다. (URL: {url})"
+                    f"[Zero] Section {section_id}: 요소를 찾을 수 없습니다. (URL: {url})"  # noqa: E501
                 )
                 return []
 

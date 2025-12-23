@@ -5,11 +5,10 @@ import uuid
 from typing import Any, Callable, Dict, Iterable, Optional
 
 import aiohttp
-from airflow import DAG
 from airflow.exceptions import AirflowSkipException
 from airflow.providers.standard.operators.empty import EmptyOperator
 from airflow.providers.standard.operators.python import PythonOperator
-from airflow.sdk import TaskGroup, TriggerRule, Variable
+from airflow.sdk import DAG, TaskGroup, TriggerRule, Variable
 from common.hash_utils import get_uuid_hash
 from common.iterable_utils import flat_map
 from crawler.namuwiki_crawlers import NamuWikiCrawler

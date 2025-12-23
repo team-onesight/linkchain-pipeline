@@ -74,7 +74,7 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
         :param data: A list of tuples/rows to be inserted.
         :param temp_table_name: Name of the temporary table (used for logging and cleanup).
         :raises Exception: Propagates any database errors after performing a rollback.
-        """
+        """  # noqa: E501
         conn = self.get_conn()
 
         try:
