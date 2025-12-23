@@ -46,40 +46,40 @@
     scripts_path: "{{ project_path }}/scripts"
 
   tasks:
+    - name: Clear Airflow Docker Containers
+      ansible.builtin.shell:
+        cmd: "sudo sh {{ scripts_path }}/clear_airflow_containers.sh"
+        chdir: "{{ project_path }}"
+
     - name: Run Webserver
       ansible.builtin.shell:
-        cmd: "sh {{ scripts_path }}/run_webserver.sh"
+        cmd: "sudo sh {{ scripts_path }}/run_webserver.sh"
         chdir: "{{ project_path }}"
       when: "'group_webserver' in group_names"
-      ignore_errors: yes
 
     - name: Run Scheduler
       ansible.builtin.shell:
-        cmd: "sh {{ scripts_path }}/run_scheduler.sh"
+        cmd: "sudo sh {{ scripts_path }}/run_scheduler.sh"
         chdir: "{{ project_path }}"
       when: "'group_scheduler' in group_names"
-      ignore_errors: yes
 
     - name: Run Worker
       ansible.builtin.shell:
-        cmd: "sh {{ scripts_path }}/run_worker.sh 8793"
+        cmd: "sudo sh {{ scripts_path }}/run_worker.sh 8793"
         chdir: "{{ project_path }}"
       when: "'group_worker' in group_names"
-      ignore_errors: yes
 
     - name: Run DAG Processor
       ansible.builtin.shell:
-        cmd: "sh {{ scripts_path }}/run_dag_processor.sh"
+        cmd: "sudo sh {{ scripts_path }}/run_dag_processor.sh"
         chdir: "{{ project_path }}"
       when: "'group_dagprocessor' in group_names"
-      ignore_errors: yes
 
     - name: Run Triggerer
       ansible.builtin.shell:
-        cmd: "sh {{ scripts_path }}/run_triggerer.sh"
+        cmd: "sudo sh {{ scripts_path }}/run_triggerer.sh"
         chdir: "{{ project_path }}"
       when: "'group_trigger' in group_names"
-      ignore_errors: yes
 
 #    - name: Run Flower
 #      ansible.builtin.shell:
