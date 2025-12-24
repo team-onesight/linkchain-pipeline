@@ -17,3 +17,23 @@ class SnowflakeRawDataQueryHook(CustomSnowflakeBaseHook):
             schema="RAW_DATA",
             **kwargs,
         )
+
+    def get_links_need_to_be_fetched(self, limit: int = 100):
+        """
+        get Links need to fetch HTML
+        :param limit: 최대 가져올 링크 수
+        :type limit: int
+        """
+        with self.get_conn() as conn:
+            cursor = conn.cursor()
+
+            sql = f"""
+            SELECT
+                link_id
+                ,url
+                ,created_at
+            FROM LINKCHAIN.RAW_DATA.LINK_NEED_TO_BE_FETCHED
+            LIMIT {limit}
+            """  # noqa: S608
+            result = cursor.execute(sql)
+            return result.fetchall()

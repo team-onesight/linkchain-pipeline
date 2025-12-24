@@ -18,4 +18,4 @@ docker-compose \
   -f ../docker-compose-prod.yaml \
   --env-file ../.env.prod \
   --profile worker \
-  up -d --force-recreate
+  up -d --force-recreate --build

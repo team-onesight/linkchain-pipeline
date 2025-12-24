@@ -11,10 +11,14 @@ from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import DAG, TaskGroup, TriggerRule, Variable
 from common.hash_utils import get_uuid_hash
 from common.iterable_utils import flat_map
-from crawlers.namuwiki_crawler import NamuWikiCrawler
-from crawlers.naver_news_crawler import NaverNewsCrawler
-from crawlers.velog_crawler import VelogCrawler, VelogPostType, VelogTrendingTimeframe
-from crawlers.youtube_crawler import crawl_channels
+from crawling.crawlers.namuwiki_crawler import NamuWikiCrawler
+from crawling.crawlers.naver_news_crawler import NaverNewsCrawler
+from crawling.crawlers.velog_crawler import (
+    VelogCrawler,
+    VelogPostType,
+    VelogTrendingTimeframe,
+)
+from crawling.crawlers.youtube_crawler import crawl_channels
 from hooks.snowflake_command_hook import SnowflakeCommandHook
 
 logger = logging.getLogger(__name__)
@@ -65,7 +69,7 @@ def _crawl_velog_trending(max_limit: int):
     return asyncio.run(_async_logic())
 
 
-def _crawl_youtube(max_limit: int, **kwargs):
+def _crawl_youtube(max_limit: int):
     """
     YouTube 크롤링
     """
@@ -82,7 +86,7 @@ def _crawl_youtube(max_limit: int, **kwargs):
     return asyncio.run(_async_logic())
 
 
-def _crawl_naver(**kwargs):
+def _crawl_naver():
     """
     Naver 뉴스 크롤링
     """
@@ -103,7 +107,7 @@ def _crawl_naver(**kwargs):
     return asyncio.run(_async_logic())
 
 
-def _crawl_namuwiki(**kwargs):
+def _crawl_namuwiki():
     """
     Namuwiki 크롤링
     """
