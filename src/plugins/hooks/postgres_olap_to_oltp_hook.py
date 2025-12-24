@@ -40,10 +40,7 @@ class PostgresOlapToOltpHook(CustomPostgresBaseHook):
 
         column_order = ",".join(columns)
         placeholders = ",".join(["%s"] * len(columns))
-        insert_sql = (
-            f"INSERT INTO {table} ({column_order}) "
-            f"VALUES ({placeholders})"
-        )
+        insert_sql = f"INSERT INTO {table} ({column_order}) VALUES ({placeholders})" # noqa: S608
 
         with closing(self.get_conn()) as conn:
             with closing(conn.cursor()) as cur:
@@ -66,4 +63,3 @@ class PostgresOlapToOltpHook(CustomPostgresBaseHook):
             conn.commit()
 
         self.log.info("Upsert completed")
-
