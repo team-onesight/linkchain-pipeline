@@ -1,3 +1,5 @@
+from contextlib import closing
+
 from hooks.postgres_base_hook import CustomPostgresBaseHook
 
 
@@ -22,3 +24,35 @@ class PostgresOlapToOltpHook(CustomPostgresBaseHook):
             schema=schema,
             **kwargs,
         )
+
+
+    def insert_rows(self, table: str, columns: list[str], rows: list[tuple]) -> None:
+        """
+        staging 테이블에 rows를 insert하는 메소드
+        """
+        if not rows:
+            self.log.info(f"No rows to insert into {table}")
+            return
+        
+        column_odrer = ",".join(columns)
+        placeholders = ",".join(["%s"] * len(columns))
+        insert_sql = f"INSERT INTO {table} ({column_odrer}) VALUES ({placeholders})"
+
+        with closing(self.get_conn()) as conn:
+            with closing(conn.cursor()) as cur:
+                cur.executemany(insert_sql, rows)
+            conn.commit()
+
+        self.log.info(f"{len(rows)} rows inserted into {table}")
+
+
+    def upsert_table(self, upsert_sql: str) -> None:
+        """
+        staging → target 테이블로 upsert하는 메소드
+        """
+        with closing(self.get_conn()) as conn:
+            with closing(conn.cursor()) as cur:
+                cur.execute(upsert_sql)
+            conn.commit()
+
+        self.log.info("Upsert completed")
