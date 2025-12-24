@@ -1,4 +1,4 @@
-from airflow.exceptions import AirflowSkipException
+from airflow.exceptions import AirflowException, AirflowSkipException
 from airflow.models import BaseOperator
 from crawling.fetchers.async_html_to_s3_fetcher import AsyncHtmlToS3Fetcher
 from hooks.s3_hook import S3Hook
@@ -57,6 +57,12 @@ class FetchAndSaveHtmlOperator(BaseOperator):
         # 3. Save Results to Snowflake
         self._save_successful_results_to_snowflake(success_rows)
         self._save_failed_results_to_snowflake(failure_rows)
+
+        total_count = len(success_rows) + len(failure_rows)
+        if total_count > 0 and len(failure_rows) / total_count > 0.5:
+            raise AirflowException(
+                f"More than 50% of crawls failed: {len(failure_rows)}/{total_count}"
+            )
 
     def _get_links_from_snowflake(self):
         query_hook = SnowflakeRawDataQueryHook(snowflake_conn_id=self.snowflake_conn_id)
