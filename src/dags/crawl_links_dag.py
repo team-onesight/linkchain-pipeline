@@ -86,6 +86,7 @@ with DAG(
             insert_task = SnowflakeUpsertLinksOperator(
                 task_id=f"insert_{cfg.task_id}",
                 source_task_id=crawl_task.task_id,
+                links_xcom_key="return_value",
             )
 
             crawl_task >> insert_task

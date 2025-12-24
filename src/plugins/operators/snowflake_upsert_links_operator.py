@@ -28,20 +28,29 @@ class SnowflakeUpsertLinksOperator(BaseOperator):
         database: str = "LINKCHAIN",
         schema: str = "RAW_DATA",
         target_table: str = "URL_CRAWLED",
+        links_xcom_key: str = "return_value",
         conn_id: str = "snowflake_default",
         **kwargs,
     ) -> None:
+        """
+        :summary: XCom에서 수집된 링크 목록을 가져와 Snowflake에 Merge(Upsert)하는 오퍼레이터
+        :param source_task_id: 링크를 수집한 소스 태스크 ID
+        :param target_table: 대상 테이블 이름
+        :param links_xcom_key: XCom에서 링크 목록을 가져올 키
+        :param conn_id: Snowflake 연결 ID
+        """  # noqa: E501
         super().__init__(**kwargs)
         self.source_task_id = source_task_id
         self.database = database
         self.schema = schema
         self.target_table = target_table
         self.conn_id = conn_id
+        self.links_xcom_key = links_xcom_key
 
     def execute(self, context: Any) -> None:
         ti = context["ti"]
 
-        raw_data = ti.xcom_pull(task_ids=self.source_task_id, key="return_value")
+        raw_data = ti.xcom_pull(task_ids=self.source_task_id, key=self.links_xcom_key)
         if not raw_data:
             raise AirflowSkipException(
                 f"No data found from task: {self.source_task_id}"
