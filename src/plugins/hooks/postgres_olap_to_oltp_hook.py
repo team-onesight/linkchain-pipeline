@@ -9,7 +9,7 @@ class PostgresOlapToOltpHook(CustomPostgresBaseHook):
 
     - connection / transaction / search_path 설정은 CustomPostgresBaseHook에서 처리
     - 실제 cursor 사용 및 SQL 실행은 호출 측(task)에서 수행
-    """ # noqa: E501
+    """
 
     def __init__(
         self,
@@ -25,30 +25,40 @@ class PostgresOlapToOltpHook(CustomPostgresBaseHook):
             **kwargs,
         )
 
-
-    def insert_rows(self, table: str, columns: list[str], rows: list[tuple]) -> None:
+    def truncate_and_insert_rows(
+        self,
+        table: str,
+        columns: list[str],
+        rows: list[tuple],
+    ) -> None:
         """
-        staging 테이블에 rows를 insert하는 메소드
+        staging 테이블을 TRUNCATE 후 rows insert
         """
         if not rows:
             self.log.info(f"No rows to insert into {table}")
             return
-        
-        column_odrer = ",".join(columns)
+
+        column_order = ",".join(columns)
         placeholders = ",".join(["%s"] * len(columns))
-        insert_sql = f"INSERT INTO {table} ({column_odrer}) VALUES ({placeholders})"
+        insert_sql = (
+            f"INSERT INTO {table} ({column_order}) "
+            f"VALUES ({placeholders})"
+        )
 
         with closing(self.get_conn()) as conn:
             with closing(conn.cursor()) as cur:
+                self.log.info(f"Truncating staging table: {table}")
+                cur.execute(f"TRUNCATE TABLE {table}")
+
                 cur.executemany(insert_sql, rows)
+
             conn.commit()
 
         self.log.info(f"{len(rows)} rows inserted into {table}")
 
-
     def upsert_table(self, upsert_sql: str) -> None:
         """
-        staging → target 테이블로 upsert하는 메소드
+        staging → target 테이블로 upsert
         """
         with closing(self.get_conn()) as conn:
             with closing(conn.cursor()) as cur:
@@ -56,3 +66,4 @@ class PostgresOlapToOltpHook(CustomPostgresBaseHook):
             conn.commit()
 
         self.log.info("Upsert completed")
+
