@@ -14,7 +14,9 @@ class S3Hook(AWS_S3Hook):
     :type aws_conn_id: str
     """
 
-    def __init__(self, *args, aws_conn_id: str = "aws_default", bucket_name, **kwargs) -> None:
+    def __init__(
+        self, *args, aws_conn_id: str = "aws_default", bucket_name, **kwargs
+    ) -> None:
         super().__init__(aws_conn_id, *args, **kwargs)
         self.bucket_name = bucket_name
         self.client = None
