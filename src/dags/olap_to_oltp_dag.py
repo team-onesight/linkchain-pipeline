@@ -53,7 +53,7 @@ def olap_to_oltp_task_group(
 
 
 with DAG(
-    dag_id="olap_to_oltp_all",
+    dag_id="olap_to_oltp_dag",
     start_date=datetime(2025, 12, 24),
     schedule="0 * * * *",
     catchup=False,
