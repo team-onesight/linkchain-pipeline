@@ -138,17 +138,22 @@ class ParseLinkDetailOperator(BaseOperator):
             hostname = parsed_url.hostname
             subdomain = None
             host = None
-            if hostname:
-                parts = hostname.split('.')
-                if len(parts) > 2:
-                    subdomain = parts[0]
-                    host = '.'.join(parts[1:])
-                else:
-                    host = hostname
+            path = None
+            parameters = None
+            fragment = None
 
-            path = parsed_url.path if parsed_url.path else None
-            parameters = parsed_url.query if parsed_url.query else None
-            fragment = parsed_url.fragment if parsed_url.fragment else None
+            if parsed_url.scheme or parsed_url.netloc:
+                if hostname:
+                    parts = hostname.split('.')
+                    if len(parts) > 2:
+                        subdomain = parts[0]
+                        host = '.'.join(parts[1:])
+                    else:
+                        host = hostname
+
+                path = parsed_url.path if parsed_url.path else None
+                parameters = parsed_url.query if parsed_url.query else None
+                fragment = parsed_url.fragment if parsed_url.fragment else None
 
             return subdomain, host, path, parameters, fragment
         except Exception:
