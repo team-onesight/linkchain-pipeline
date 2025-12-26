@@ -214,7 +214,7 @@ def test_parse_link_detail_operator(
 
 
 @pytest.mark.parametrize(
-    "url, expected"
+    "url, expected",
     [
         (
             "https://www.google.com/search?q=test",
