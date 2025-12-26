@@ -31,7 +31,7 @@ class OlapToStagingOperator(BaseOperator):
 
         self.log.info(f"{len(rows)} rows fetched from {self.olap_table}")
 
-        pg_hook = PostgresOlapToOltpHook(postgres_conn_id="postgres_conn_id")
+        pg_hook = PostgresOlapToOltpHook(postgres_conn_id="postgres_default")
 
         pg_hook.truncate_and_insert_rows(
             table=self.staging_table,

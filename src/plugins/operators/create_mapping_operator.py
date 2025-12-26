@@ -12,5 +12,5 @@ class CreateMappingOperator(BaseOperator):
         self.mapping_sql = mapping_sql
 
     def execute(self, context) -> None:
-        pg_hook = PostgresOlapToOltpHook(postgres_conn_id="postgres_conn_id")
+        pg_hook = PostgresOlapToOltpHook(postgres_conn_id="postgres_default")
         pg_hook.upsert_table(self.mapping_sql)
