@@ -10,7 +10,7 @@ class CustomPostgresBaseHook(ABC, PostgresHook):
 
     :param postgres_conn_id: airflow에서 설정된 postgres connection id
     :param schema: schema to set for the session
-    """ # noqa: E501
+    """  # noqa: E501
 
     conn: PGConnection = None
 
@@ -21,7 +21,7 @@ class CustomPostgresBaseHook(ABC, PostgresHook):
         *args,
         **kwargs,
     ):
-        super().__init__(*args, postgres_conn_id=postgres_conn_id,  **kwargs)
+        super().__init__(*args, postgres_conn_id=postgres_conn_id, **kwargs)
         self.schema = schema
 
     def get_conn(self) -> PGConnection:

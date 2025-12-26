@@ -1551,6 +1551,7 @@ source = { editable = "." }
 dependencies = [
     { name = "apache-airflow-providers-amazon" },
     { name = "apache-airflow-providers-snowflake" },
+    { name = "apache-airflow-providers-standard" },
     { name = "pandas" },
     { name = "playwright" },
     { name = "psycopg2-binary" },
@@ -1570,6 +1571,7 @@ dev = [
 requires-dist = [
     { name = "apache-airflow-providers-amazon", specifier = ">=9.18.1" },
     { name = "apache-airflow-providers-snowflake", specifier = ">=5.3.0" },
+    { name = "apache-airflow-providers-standard", specifier = ">=0.0.2" },
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "playwright", specifier = ">=1.57.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.11" },
