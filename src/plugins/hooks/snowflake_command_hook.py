@@ -17,7 +17,7 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
     def __init__(
         self,
         *args,
-        snowflake_conn_id: str = "snowflake_conn",
+        snowflake_conn_id: str = "snowflake_default",
         database: str = None,
         schema: str = None,
         **kwargs,
