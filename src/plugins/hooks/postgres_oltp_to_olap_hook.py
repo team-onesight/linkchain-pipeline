@@ -15,7 +15,7 @@ class PostgresOltpToOlapHook(CustomPostgresBaseHook):
 
     def __init__(
         self,
-        postgres_conn_id: str = "postgres_dev",
+        postgres_conn_id: str = "postgres_default",
         schema: str = None,
         *args,
         **kwargs,
