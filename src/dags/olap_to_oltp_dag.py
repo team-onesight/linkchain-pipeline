@@ -10,20 +10,26 @@ from sql.olap_to_oltp_link import MERGE_LINK_SQL
 from sql.olap_to_oltp_link_group import LINK_GROUP_MAPPING_SQL, UPSERT_LINK_GROUP_SQL
 from sql.olap_to_oltp_tag import TAG_MAPPING_SQL, UPSERT_TAG_SQL
 
-LINK_STAGING_COLUMNS = Variable.get("LINK_STAGING_COLUMNS", deserialize_json=True)
-LINK_GROUP_STAGING_COLUMNS = Variable.get("LINK_GROUP_STAGING_COLUMNS", deserialize_json=True) # noqa: E501
-TAG_STAGING_COLUMNS = Variable.get("TAG_STAGING_COLUMNS", deserialize_json=True)
+STAGING_COLUMNS_MAPPING = {
+    "link": "LINK_STAGING_COLUMNS",
+    "link_group": "LINK_GROUP_STAGING_COLUMNS",
+    "tag": "TAG_STAGING_COLUMNS",
+}
 
 
 def olap_to_oltp_task_group(
     group_id,
     olap_table,
     staging_table,
-    staging_columns,
     upsert_sql,
     mapping_sql,
 ):
     with TaskGroup(group_id=group_id) as tg:
+        variable_key = STAGING_COLUMNS_MAPPING.get(group_id.lower())
+        if not variable_key:
+            raise ValueError(f"Invalid group_id: {group_id}")
+        staging_columns = Variable.get(variable_key, deserialize_json=True)
+
         olap_to_staging = OlapToStagingOperator(
             task_id="olap_to_staging",
             olap_table=olap_table,
@@ -53,12 +59,12 @@ with DAG(
     catchup=False,
     tags=["olap", "oltp"],
 ) as dag:
+
     # link
     link_task_group = olap_to_oltp_task_group(
         group_id="link",
         olap_table="ANALYTICS.LINK_CLUSTERED",
         staging_table="staging.link",
-        staging_columns=LINK_STAGING_COLUMNS,
         upsert_sql=MERGE_LINK_SQL,
         mapping_sql=None,  # link는 mapping이 없음
     )
@@ -68,7 +74,6 @@ with DAG(
         group_id="link_group",
         olap_table="ANALYTICS.LINK_GROUP",
         staging_table="staging.link_group",
-        staging_columns=LINK_GROUP_STAGING_COLUMNS,
         upsert_sql=UPSERT_LINK_GROUP_SQL,
         mapping_sql=LINK_GROUP_MAPPING_SQL,
     )
@@ -78,7 +83,6 @@ with DAG(
         group_id="tag",
         olap_table="ANALYTICS.TAG",
         staging_table="staging.tag",
-        staging_columns=TAG_STAGING_COLUMNS,
         upsert_sql=UPSERT_TAG_SQL,
         mapping_sql=TAG_MAPPING_SQL,
     )
