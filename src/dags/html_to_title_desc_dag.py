@@ -71,7 +71,7 @@ def update_to_integrated_table(formatted_data:pd.DataFrame) -> int:
             updated_count = cursor.rowcount
             conn.commit()
             logging.info(f"Successfully updated {updated_count} rows.")
-            logging.log(f'execute time : {time.time() - start:.2f}s')
+            logging.info(f'execute time : {time.time() - start:.2f}s')
             return updated_count
 
 
