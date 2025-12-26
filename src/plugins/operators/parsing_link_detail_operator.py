@@ -30,6 +30,7 @@ class ParseLinkDetailOperator(BaseOperator):
     def __init__(self,
                  *args,
                  snowflake_db : str,
+                 snowflake_conn_id: str,
                  source_table: str,
                  source_columns: list[str],
                  dest_table: str,
@@ -38,6 +39,7 @@ class ParseLinkDetailOperator(BaseOperator):
                  **kwargs):
         super().__init__(*args, **kwargs)
         self.snowflake_db = snowflake_db
+        self.snowflake_conn_id = snowflake_conn_id
         self.source_table = source_table
         self.source_columns = source_columns
         self.dest_table = dest_table
@@ -48,7 +50,9 @@ class ParseLinkDetailOperator(BaseOperator):
         """
         Execute
         """
-        ods_hook = SnowflakeODSQueryHook()
+        ods_hook = SnowflakeODSQueryHook(
+            snowflake_conn_id=self.snowflake_conn_id
+        )
 
         # 1
         link_chunks_generator = ods_hook.get_links(
@@ -56,7 +60,10 @@ class ParseLinkDetailOperator(BaseOperator):
         )
 
         dest_schema, dest_table_name = self.dest_table.split('.')
-        cmd_hook = SnowflakeCommandHook(database=self.snowflake_db, schema=dest_schema)
+        cmd_hook = SnowflakeCommandHook(
+            snowflake_conn_id=self.snowflake_conn_id,
+            database=self.snowflake_db, schema=dest_schema
+        )
 
         # 2
         cmd_hook.command(f"TRUNCATE TABLE {dest_table_name}")

@@ -31,8 +31,8 @@ with DAG(
     for table_key, table_config in config["table_config"].items():
         task = PostgresToSnowflakeOperator(
             task_id=f"transfer_{table_key}",
-            postgres_conn_id="postgres_conn",
-            snowflake_conn_id="snowflake_conn",
+            postgres_conn_id="postgres_default",
+            snowflake_conn_id="snowflake_default",
             snowflake_db="linkchain",
             snowflake_schema="ods",
             table_key=table_key,
@@ -52,6 +52,7 @@ with DAG(
     parse_link_detail = ParseLinkDetailOperator(
         task_id='parse_link_detail',
         snowflake_db = "linkchain",
+        snowflake_conn_id="snowflake_default",
         source_table=link_config["snowflake_table"],
         source_columns=["link_id", "url"],
         dest_table=link_detail_dest_table,
