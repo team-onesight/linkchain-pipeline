@@ -1,6 +1,6 @@
 from contextlib import closing
 
-from hooks.postgres_base_hook import CustomPostgresBaseHook
+from hooks.abc.postgres_base_hook import CustomPostgresBaseHook
 
 
 class PostgresOlapToOltpHook(CustomPostgresBaseHook):

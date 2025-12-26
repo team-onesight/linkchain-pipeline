@@ -1,6 +1,6 @@
 from contextlib import closing
 
-from hooks.snowflake_base_hook import CustomSnowflakeBaseHook
+from hooks.abc.snowflake_base_hook import CustomSnowflakeBaseHook
 
 
 class SnowflakeAnalyticsQueryHook(CustomSnowflakeBaseHook):

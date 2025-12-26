@@ -1,6 +1,6 @@
 import logging
 
-from hooks.snowflake_base_hook import CustomSnowflakeBaseHook
+from hooks.abc.snowflake_base_hook import CustomSnowflakeBaseHook
 
 
 class SnowflakeCommandHook(CustomSnowflakeBaseHook):
