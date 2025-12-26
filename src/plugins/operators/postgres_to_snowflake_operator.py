@@ -1,6 +1,6 @@
 import os
 
-from airflow.models.baseoperator import BaseOperator
+from airflow.sdk.bases.operator import BaseOperator
 from airflow.utils.context import Context
 from hooks.postgres_oltp_to_olap_hook import PostgresOltpToOlapHook
 from hooks.snowflake_command_hook import SnowflakeCommandHook
