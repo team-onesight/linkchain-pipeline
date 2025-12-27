@@ -24,6 +24,7 @@ class PostgresToSnowflakeOperator(BaseOperator):
     :param snowflake_db: 데이터를 적재할 Snowflake 데이터베이스 이름
     :param snowflake_schema: 데이터를 적재할 Snowflake 스키마 이름
     """  # noqa: E501
+    template_fields = [("chunk_size")]
 
     def __init__(
         self,

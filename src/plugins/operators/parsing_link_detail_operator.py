@@ -26,6 +26,7 @@ class ParseLinkDetailOperator(BaseOperator):
     :param dest_columns: 목적 테이블의 전체 컬럼 리스트
     :param chunk_size: 한 번에 처리할 행(row)의 개수
     """  # noqa: E501
+    template_fields = [("chunk_size")]
 
     def __init__(self,
                  *args,
