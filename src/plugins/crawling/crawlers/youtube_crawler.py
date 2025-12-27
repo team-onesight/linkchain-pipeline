@@ -3,35 +3,28 @@ from typing import List
 
 import scrapetube
 from airflow.exceptions import AirflowSkipException
-from airflow.sdk import Variable
 from crawling.crawlers.abc.base_crawler import BaseCrawler
 
 
 class YoutubeCrawler(BaseCrawler):
     channels = None
     max_limit = 20
-    channels_variable_key = None
 
     def __init__(
         self,
-        channels_variable_key: str = "youtube_target_channels",
+        channels: list[str],
         max_limit: int = 20,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.channels_variable_key = channels_variable_key
+        self.channels = channels
         self.max_limit = max_limit
 
     async def process_crawling(self) -> List[str]:
-        try:
-            self.channels = Variable.get(
-                self.channels_variable_key, deserialize_json=True
-            )
-        except Exception as e:
-            self.log.error(f"Variable '{self.channels_variable_key}' 로드 실패: {e}")
-            raise AirflowSkipException("YoutubeCrawler 스킵 - 채널 정보 없음")  # noqa: B904
-
         loop = asyncio.get_running_loop()
+
+        if not self.channels:
+            raise AirflowSkipException("there is no channels to crawl.")
 
         futures = [
             loop.run_in_executor(
