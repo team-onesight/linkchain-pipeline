@@ -2,7 +2,7 @@ import tempfile
 from contextlib import closing
 
 import pandas as pd
-from hooks.postgres_base_hook import CustomPostgresBaseHook
+from hooks.abc.postgres_base_hook import CustomPostgresBaseHook
 
 
 class PostgresOltpToOlapHook(CustomPostgresBaseHook):
@@ -15,7 +15,7 @@ class PostgresOltpToOlapHook(CustomPostgresBaseHook):
 
     def __init__(
         self,
-        postgres_conn_id: str = "postgres_dev",
+        postgres_conn_id: str = "postgres_default",
         schema: str = None,
         *args,
         **kwargs,
