@@ -21,7 +21,7 @@ class SnowflakeODSQueryHook(CustomSnowflakeBaseHook):
             **kwargs,
         )
 
-    def get_links(self, table_name: str, columns: list[str], chunk_size: int):
+    def query(self, table_name: str, columns: list[str], chunk_size: int):
         """
         Snowflake ODS 테이블의 데이터를 청크(Chunk) 단위로 읽어와 Pandas DataFrame 제너레이터로 반환합니다.
 

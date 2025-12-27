@@ -172,7 +172,7 @@ def test_parse_link_detail_operator(
         ],
         columns=["LINK_ID", "URL"],
     )
-    mock_ods_hook_instance.get_links.return_value = [df_chunk]
+    mock_ods_hook_instance.query.return_value = [df_chunk]
 
     mock_cmd_hook_instance = mock_sf_command_hook_for_parsing.return_value
     mock_conn = MagicMock()
@@ -186,7 +186,7 @@ def test_parse_link_detail_operator(
     # then
     # 1
     mock_sf_ods_query_hook.assert_called_with(snowflake_conn_id="snowflake_default")
-    mock_ods_hook_instance.get_links.assert_called_with(
+    mock_ods_hook_instance.query.assert_called_with(
         "ods.link", ["link_id", "url"], 100
     )
 

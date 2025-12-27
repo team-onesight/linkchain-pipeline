@@ -56,7 +56,7 @@ class ParseLinkDetailOperator(BaseOperator):
         )
 
         # 1
-        link_chunks_generator = ods_hook.get_links(
+        link_chunks_generator = ods_hook.query(
             self.source_table, self.source_columns, self.chunk_size
         )
 
