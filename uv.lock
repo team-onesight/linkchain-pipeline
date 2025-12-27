@@ -1547,7 +1547,7 @@ wheels = [
 [[package]]
 name = "linkchain-pipeline"
 version = "0.1.0"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "apache-airflow-providers-amazon" },
     { name = "apache-airflow-providers-snowflake" },
