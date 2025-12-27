@@ -1,3 +1,6 @@
+from contextlib import closing
+
+import pandas as pd
 from hooks.abc.snowflake_base_hook import CustomSnowflakeBaseHook
 
 
