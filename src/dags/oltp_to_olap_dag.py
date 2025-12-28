@@ -11,12 +11,28 @@ Link 테이블의 url 필드에 대해 추가 파싱 작업을 수행합니다.
 - Airflow Variable `oltp_to_olap`에서 Chunk Size를 관리합니다.
 """  # noqa: E501
 
+from typing import Dict, List
+
 from airflow.sdk import DAG
 from operators.parsing_link_detail_operator import ParseLinkDetailOperator
 from operators.postgres_to_snowflake_operator import PostgresToSnowflakeOperator
+from pydantic import BaseModel
 
-OLTP_CONFIG = {
-    "table_config": {
+
+class TableConfig(BaseModel):
+    source_table: str
+    snowflake_table: str
+    columns: List[str]
+
+class OLTPConfig(BaseModel):
+    table_config: Dict[str, TableConfig]
+
+class TargetTableConfig(BaseModel):
+    table_key: str
+    columns: List[str]
+
+OLTP_CONFIG = OLTPConfig(
+    table_config={
         "link": {
             "source_table": "link",
             "snowflake_table": "ods.link",
@@ -75,14 +91,12 @@ OLTP_CONFIG = {
             ]
         }
     }
-}
+)
 
-TARGET_TABLE = {
-    "table_key" : "raw_data.link_detail",
-    "columns": [
-        "link_id", "subdomain", "host", "path", "parameters", "fragment"
-    ]
-}
+TARGET_CONFIG = TargetTableConfig(
+    table_key="raw_data.link_detail",
+    columns=["link_id", "subdomain", "host", "path", "parameters", "fragment"]
+)
 
 with DAG(
     dag_id="oltp_to_olap_dag",
@@ -92,7 +106,7 @@ with DAG(
     render_template_as_native_obj=True,
 ) as dag:
     tasks = {}
-    for table_key, table_config in OLTP_CONFIG["table_config"].items():
+    for table_key, table_config in OLTP_CONFIG.table_config.items():
         task = PostgresToSnowflakeOperator(
             task_id=f"transfer_{table_key}",
             postgres_conn_id="postgres_default",
@@ -100,22 +114,22 @@ with DAG(
             snowflake_db="linkchain",
             snowflake_schema="ods",
             table_key=table_key,
-            table_config=table_config,
+            table_config=table_config.model_dump(),
             chunk_size="{{ var.json.oltp_to_olap.chunk_size }}",
             pool="oltp_to_olap_pool"
         )
         tasks[table_key] = task
 
-    link_config = OLTP_CONFIG["table_config"]["link"]
+    link_config = OLTP_CONFIG.table_config["link"]
 
-    link_detail_dest_table = TARGET_TABLE["table_key"]
-    link_detail_dest_columns = TARGET_TABLE["columns"]
+    link_detail_dest_table = TARGET_CONFIG.table_key
+    link_detail_dest_columns = TARGET_CONFIG.columns
 
     parse_link_detail = ParseLinkDetailOperator(
         task_id='parse_link_detail',
         snowflake_db = "linkchain",
         snowflake_conn_id="snowflake_default",
-        source_table=link_config["snowflake_table"],
+        source_table=link_config.snowflake_table,
         source_columns=["link_id", "url"],
         dest_table=link_detail_dest_table,
         dest_columns=link_detail_dest_columns,
