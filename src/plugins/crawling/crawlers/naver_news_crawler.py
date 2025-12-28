@@ -2,7 +2,6 @@ import asyncio
 from typing import List, Tuple
 
 import aiohttp
-from airflow.sdk import Variable
 from bs4 import BeautifulSoup
 from crawling.crawlers.abc.base_crawler import BaseCrawler
 
@@ -12,21 +11,13 @@ class NaverNewsCrawler(BaseCrawler):
     SPORT_SECTION = "107"
     BASE_URL = "https://news.naver.com/section"
     sections: List[str] = [ENTER_SECTION, SPORT_SECTION]
-    sector_variable_key = None
 
-    def __init__(self, sector_variable_key: str = "naver_news_sections", **kwargs):
+    def __init__(self, news_sectors: list[str], **kwargs):
         super().__init__(**kwargs)
-
-        self.sector_variable_key = sector_variable_key
+        self.sections.extend(news_sectors)
 
     async def process_crawling(self) -> List[str]:
-        if not self.sections:
-            return []
-        if self.sector_variable_key:
-            dynamic_sections = Variable.get(
-                self.sector_variable_key, deserialize_json=True, default=[]
-            )
-            self.sections = list(set(self.sections + dynamic_sections))
+        self.log.debug("Naver News sections to crawl: %s", self.sections)
 
         async with aiohttp.ClientSession() as session:
             tasks = [self._crawl_section(sec_id, session) for sec_id in self.sections]

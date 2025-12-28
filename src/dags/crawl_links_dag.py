@@ -24,14 +24,16 @@ logger = logging.getLogger(__name__)
 class CrawlerConfig:
     task_id: str
     crawler_cls: Type[BaseCrawler]  # crawler class
-    params: Dict[str, Any] = dc.field(default_factory=dict)  # crawler init params
+    crawler_params: Dict[str, Any] = dc.field(
+        default_factory=dict
+    )  # crawler init params
 
 
-crawler_configs = [
+crawler_configs: list[CrawlerConfig] = [
     CrawlerConfig(
         task_id="crawl_velog_feed",
         crawler_cls=VelogFeedCrawler,
-        params={
+        crawler_params={
             "post_types": [VelogPostType.RECENT, VelogPostType.RECENT],
             "max_limit": 100,
         },
@@ -39,7 +41,7 @@ crawler_configs = [
     CrawlerConfig(
         task_id="crawl_velog_trending",
         crawler_cls=VelogTrendingCrawler,
-        params={
+        crawler_params={
             "timeframes": [
                 VelogTrendingTimeframe.DAY,
                 VelogTrendingTimeframe.WEEK,
@@ -52,16 +54,16 @@ crawler_configs = [
     CrawlerConfig(
         task_id="crawl_naver_news",
         crawler_cls=NaverNewsCrawler,
-        params={
-            "sector_variable_key": "naver_news_sections",
+        crawler_params={
+            "news_sectors": "{{ var.json.get('naver_news_sections', []) }}",
             "max_limit": 100,
         },
     ),
     CrawlerConfig(
         task_id="crawl_youtube",
         crawler_cls=YoutubeCrawler,
-        params={
-            "channels_variable_key": "youtube_target_channels",
+        crawler_params={
+            "channels": "{{ var.json.get('youtube_target_channels', []) }}",
             "max_limit": 50,
         },
     ),
@@ -70,6 +72,7 @@ crawler_configs = [
 with DAG(
     dag_id="crawl_links_dag",
     schedule="@hourly",
+    render_template_as_native_obj=True,
     start_date=None,
     catchup=False,
 ) as dag:
@@ -80,7 +83,7 @@ with DAG(
             crawl_task = LinkCrawlingOperator(
                 task_id=cfg.task_id,
                 crawler_cls=cfg.crawler_cls,
-                crawler_params=cfg.params,
+                crawler_params=cfg.crawler_params,
             )
 
             insert_task = SnowflakeUpsertLinksOperator(
