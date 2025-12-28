@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from airflow.providers.standard.operators.empty import EmptyOperator
-from airflow.sdk import DAG, Variable
+from airflow.sdk import DAG
 from airflow.utils.task_group import TaskGroup
 from operators.create_mapping_operator import CreateMappingOperator
 from operators.olap_to_staging_operator import OlapToStagingOperator
@@ -28,7 +28,7 @@ def olap_to_oltp_task_group(
         variable_key = STAGING_COLUMNS_MAPPING.get(group_id.lower())
         if not variable_key:
             raise ValueError(f"Invalid group_id: {group_id}")
-        staging_columns = Variable.get(variable_key, deserialize_json=True)
+        staging_columns = "{{ var.json." + variable_key + " }}"
 
         olap_to_staging = OlapToStagingOperator(
             task_id="olap_to_staging",
@@ -58,6 +58,7 @@ with DAG(
     schedule="0 * * * *",
     catchup=False,
     tags=["olap", "oltp"],
+    render_template_as_native_obj=True
 ) as dag:
 
     # link
