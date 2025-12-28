@@ -1,6 +1,6 @@
 import os
 
-from airflow.models.baseoperator import BaseOperator
+from airflow.sdk.bases.operator import BaseOperator
 from airflow.utils.context import Context
 from hooks.postgres_oltp_to_olap_hook import PostgresOltpToOlapHook
 from hooks.snowflake_command_hook import SnowflakeCommandHook
@@ -24,6 +24,7 @@ class PostgresToSnowflakeOperator(BaseOperator):
     :param snowflake_db: 데이터를 적재할 Snowflake 데이터베이스 이름
     :param snowflake_schema: 데이터를 적재할 Snowflake 스키마 이름
     """  # noqa: E501
+    template_fields = [("chunk_size")]
 
     def __init__(
         self,
