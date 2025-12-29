@@ -5,7 +5,6 @@ import pandas as pd
 from airflow.sdk import DAG, task
 from extractor.html_extractor import extract_records_from_html
 from hooks.s3_hook import S3Hook
-from hooks.snowflake_analytics_hook import SnowflakeAnalyticsQueryHook
 from hooks.snowflake_command_hook import SnowflakeCommandHook
 
 
@@ -63,7 +62,7 @@ def update_to_integrated_table(formatted_data:pd.DataFrame) -> int:
         WHERE
             LINK_ID = %s
     """
-    hook = SnowflakeAnalyticsQueryHook()
+    hook = SnowflakeCommandHook()
     start = time.time()
     with hook.get_conn() as conn:
         with conn.cursor() as cursor:
