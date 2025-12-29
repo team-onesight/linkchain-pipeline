@@ -2,7 +2,6 @@ import logging
 import time
 import json
 
-import pandas as pd
 from airflow.sdk import DAG, task
 from extractor.html_extractor import extract_records_from_html
 from hooks.s3_hook import S3Hook
