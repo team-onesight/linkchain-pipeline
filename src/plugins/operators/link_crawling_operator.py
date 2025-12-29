@@ -13,6 +13,8 @@ class LinkCrawlingOperator(BaseOperator):
 
     shallow_copy_attrs: Sequence[str] = (*BaseOperator.shallow_copy_attrs, "crawler")
 
+    template_fields = ("crawler_params",)
+
     def __init__(
         self,
         crawler_cls: Type[BaseCrawler],

@@ -1,6 +1,6 @@
 from contextlib import closing
 
-from hooks.snowflake_base_hook import CustomSnowflakeBaseHook
+from hooks.abc.snowflake_base_hook import CustomSnowflakeBaseHook
 
 
 class SnowflakeAnalyticsQueryHook(CustomSnowflakeBaseHook):
@@ -11,7 +11,7 @@ class SnowflakeAnalyticsQueryHook(CustomSnowflakeBaseHook):
     :param snowflake_conn_id: The Airflow connection ID to use for Snowflake.
     """  # noqa: E501
 
-    def __init__(self, *args, snowflake_conn_id: str = "snowflake_conn", **kwargs):
+    def __init__(self, *args, snowflake_conn_id: str = "snowflake_default", **kwargs):
         super().__init__(
             *args,
             snowflake_conn_id=snowflake_conn_id,

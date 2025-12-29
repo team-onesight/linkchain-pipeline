@@ -1,6 +1,6 @@
 import logging
 
-from hooks.snowflake_base_hook import CustomSnowflakeBaseHook
+from hooks.abc.snowflake_base_hook import CustomSnowflakeBaseHook
 
 
 class SnowflakeCommandHook(CustomSnowflakeBaseHook):
@@ -17,7 +17,7 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
     def __init__(
         self,
         *args,
-        snowflake_conn_id: str = "snowflake_conn",
+        snowflake_conn_id: str = "snowflake_default",
         database: str = None,
         schema: str = None,
         **kwargs,

@@ -23,3 +23,5 @@ LINK_GROUP_MAPPING_SQL = """
     AND m.group_id = pg.group_id
     WHERE m.link_id IS NULL;
     """
+
+LINK_GROUP_STAGING_COLUMNS = ["link_id", "group_title", "created_at"]
