@@ -14,10 +14,6 @@ class NamuWikiCrawler(BaseCrawler):
     BASE_URL = "https://namu.wiki"
     RECENT_CHANGES_URL = "https://namu.wiki/RecentChanges"
 
-    HEADERS = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"  # noqa: E501
-    }
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -61,7 +57,7 @@ class NamuWikiCrawler(BaseCrawler):
             if not href_list:
                 raise AirflowSkipException(
                     "요소를 찾을 수 없습니다."
-                    "나무위키 프론트엔드 업데이트로 페이지 구조가 변경되었을 수 있습니다." # noqa: E501
+                    "나무위키 프론트엔드 업데이트로 페이지 구조가 변경되었을 수 있습니다."  # noqa: E501
                 )
 
             def clear_image_urls_fn(url: str) -> bool:
