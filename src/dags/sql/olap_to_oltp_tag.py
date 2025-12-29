@@ -22,3 +22,5 @@ TAG_MAPPING_SQL = """
     AND m.tag_id = pt.tag_id
     WHERE m.link_id IS NULL;
     """
+
+TAG_STAGING_COLUMNS = ["link_id", "tag_name", "created_at"]

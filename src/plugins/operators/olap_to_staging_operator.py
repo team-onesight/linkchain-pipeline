@@ -1,5 +1,3 @@
-from typing import Any
-
 from airflow.sdk.bases.operator import BaseOperator
 from hooks.postgres_olap_to_oltp_hook import PostgresOlapToOltpHook
 from hooks.snowflake_analytics_hook import SnowflakeAnalyticsQueryHook
@@ -9,13 +7,14 @@ class OlapToStagingOperator(BaseOperator):
     """
     OLAP table → OLTP staging table 데이터 적재 Operator
     """
+
     template_fields = ("staging_columns",)
 
     def __init__(
         self,
         olap_table: str,
         staging_table: str,
-        staging_columns: Any,
+        staging_columns: list[str],
         *args,
         **kwargs,
     ):
