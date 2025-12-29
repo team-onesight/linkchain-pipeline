@@ -1,4 +1,5 @@
 from typing import Any
+
 from airflow.sdk.bases.operator import BaseOperator
 from hooks.postgres_olap_to_oltp_hook import PostgresOlapToOltpHook
 from hooks.snowflake_analytics_hook import SnowflakeAnalyticsQueryHook
@@ -29,7 +30,7 @@ class OlapToStagingOperator(BaseOperator):
             self.staging_columns,
             type(self.staging_columns),
         )
-        
+
         sf_hook = SnowflakeAnalyticsQueryHook()
 
         columns, rows = sf_hook.get_olap_table_data(

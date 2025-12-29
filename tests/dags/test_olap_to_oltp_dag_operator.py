@@ -1,5 +1,4 @@
 import pytest
-
 from operators.create_mapping_operator import CreateMappingOperator
 from operators.olap_to_staging_operator import OlapToStagingOperator
 from operators.staging_to_target_operator import StagingToTargetOperator
