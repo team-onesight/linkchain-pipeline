@@ -1,4 +1,4 @@
-from airflow.models import BaseOperator
+from airflow.sdk.bases.operator import BaseOperator
 from hooks.postgres_olap_to_oltp_hook import PostgresOlapToOltpHook
 
 

@@ -30,3 +30,5 @@ MERGE_LINK_SQL = """
             sl.link_embedding
         );
     """
+
+LINK_STAGING_COLUMNS = ["link_id", "url", "title", "description", "created_by", "created_at", "link_embedding"] # noqa: E501
