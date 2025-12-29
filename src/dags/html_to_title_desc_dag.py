@@ -18,7 +18,7 @@ def merge_combined_sources_to_integrated_table() -> int:
     return count
 
 @task
-def get_urls_without_title_desc(**context) -> list:
+def get_urls_without_title_desc(**context) -> str:
     """Title/Desc가 NULL인 대상 목록 가져오기"""
     snowflake_hook = SnowflakeCommandHook()
     urls = snowflake_hook.get_integrated_table_where_title_desc_is_null()
@@ -42,9 +42,11 @@ def get_urls_without_title_desc(**context) -> list:
     return tmp_key_path
 
 @task
-def extract_title_desc(tmp_key_path: str, **context)-> list:
+def extract_title_desc(**context)-> str:
     """S3에서 HTML 다운로드 및 정보 추출"""
     s3hook = S3Hook(bucket_name='de7-team1')
+    ti = context['ti']
+    tmp_key_path = ti.xcom_pull(task_ids='get_urls_without_title_desc')
     json_string = s3hook.download_bytes(tmp_key_path)
     link_id_with_s3_path = json.loads(json_string)
 
@@ -79,9 +81,11 @@ def extract_title_desc(tmp_key_path: str, **context)-> list:
     return tmp_key_path
 
 @task
-def update_to_integrated_table(tmp_key_path: str) -> int:
+def update_to_integrated_table(**context) -> int:
     """최종 테이블 업데이트"""
     s3hook = S3Hook(bucket_name='de7-team1')
+    ti = context['ti']
+    tmp_key_path = ti.xcom_pull(task_ids='extract_title_desc')
     json_string = s3hook.download_bytes(tmp_key_path)
     formatted_data = json.loads(json_string)
 
@@ -112,16 +116,7 @@ with DAG(
     start_date=None,
     catchup=False,
 ) as dag:
-    merged_links = merge_combined_sources_to_integrated_table()
-
-
-    link_id_with_s3_path = get_urls_without_title_desc()
-
-
-    formatted_data = extract_title_desc(link_id_with_s3_path)
-
-
-    update_count = update_to_integrated_table(formatted_data)
-
-
-    merged_links >> link_id_with_s3_path >> formatted_data >> update_count
+    merge_combined_sources_to_integrated_table() >> \
+    get_urls_without_title_desc() >> \
+    extract_title_desc() >> \
+    update_to_integrated_table()
