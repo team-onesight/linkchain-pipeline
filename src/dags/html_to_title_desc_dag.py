@@ -1,6 +1,6 @@
+import json
 import logging
 import time
-import json
 
 from airflow.sdk import DAG, task
 from extractor.html_extractor import extract_records_from_html
