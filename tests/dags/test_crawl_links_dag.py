@@ -92,18 +92,14 @@ def test_link_crawling_operator_execute(mocker, mock_context):
 
 def test_youtube_crawler_no_channels_error_handling(mocker):
     # given
-    mock_var_get = mocker.patch("airflow.models.Variable.get")
-    mock_var_get.return_value = []
+    crawler = YoutubeCrawler(channels=[])
+    mock_method = mocker.patch.object(YoutubeCrawler, "_crawl_single_channel")
 
-    mock_var_get = mocker.patch("crawling.crawlers.youtube_crawler.Variable.get")
-
-    mock_var_get.side_effect = Exception("Variable not found")
-
-    crawler = YoutubeCrawler(channels_variable_key="test_key")
+    # when / then
+    with pytest.raises(AirflowSkipException) as expected_exception:
+        asyncio.run(crawler.process_crawling())
+        assert expected_exception.match("there is no channels to crawl.")
 
     # then
-    with pytest.raises(AirflowSkipException) as excinfo:
-        asyncio.run(crawler.process_crawling())
-
-    assert "채널 정보 없음" in str(excinfo.value)
-    mock_var_get.assert_called_with("test_key", deserialize_json=True)
+    mock_method.assert_not_called()
+    assert mock_method.call_count == 0
