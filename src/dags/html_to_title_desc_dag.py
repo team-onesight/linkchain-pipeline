@@ -7,13 +7,14 @@ from extractor.html_extractor import extract_records_from_html
 from hooks.s3_hook import S3Hook
 from hooks.snowflake_command_hook import SnowflakeCommandHook
 
+logger = logging.getLogger(__name__)
 
 @task
 def merge_combined_sources_to_integrated_table() -> int:
     """통합 테이블로 데이터 병합"""
     hook = SnowflakeCommandHook()
     count = hook.merge_combined_sources_to_integrated_table()
-    logging.info(f'{count} links merged into INTEGRATED_TABLE')
+    logger.info(f'{count} links merged into INTEGRATED_TABLE')
     return count
 
 @task
@@ -34,10 +35,10 @@ def get_urls_without_title_desc(**context) -> list:
         replace=True
     )
 
-    logging.info(
+    logger.info(
         f'{len(link_id_with_s3_path)} links looking for title and description'
     )
-    logging.info(f'tmp file saved on: {tmp_key_path}')
+    logger.info(f'tmp file saved on: {tmp_key_path}')
     return tmp_key_path
 
 @task
@@ -49,7 +50,7 @@ def extract_title_desc(tmp_key_path: str, **context)-> list:
 
     link_id_with_title_desc = []
     start = time.time()
-    logging.info(
+    logger.info(
         f'Extracting {len(link_id_with_s3_path)} data\'s title and descriptions'
     )
 
@@ -69,12 +70,12 @@ def extract_title_desc(tmp_key_path: str, **context)-> list:
         replace=True
     )
 
-    logging.info(f'{len(link_id_with_title_desc)} data waiting for update')
-    logging.info(
+    logger.info(f'{len(link_id_with_title_desc)} data waiting for update')
+    logger.info(
         f'excluded {len(link_id_with_s3_path)-len(link_id_with_title_desc)} data'
     )
-    logging.info(f'execute time : {time.time() - start:.2f}s')
-    logging.info(f'tmp file saved on: {tmp_key_path}')
+    logger.info(f'execute time : {time.time() - start:.2f}s')
+    logger.info(f'tmp file saved on: {tmp_key_path}')
     return tmp_key_path
 
 @task
@@ -99,8 +100,8 @@ def update_to_integrated_table(tmp_key_path: str) -> int:
             cursor.executemany(sql, formatted_data)
             updated_count = cursor.rowcount
             conn.commit()
-            logging.info(f"Successfully updated {updated_count} rows.")
-            logging.info(f'execute time : {time.time() - start:.2f}s')
+            logger.info(f"Successfully updated {updated_count} rows.")
+            logger.info(f'execute time : {time.time() - start:.2f}s')
             return updated_count
 
 
