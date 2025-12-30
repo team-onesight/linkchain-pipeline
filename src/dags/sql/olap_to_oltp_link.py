@@ -6,7 +6,6 @@ MERGE_LINK_SQL = """
         UPDATE SET
             title = sl.title,
             description = sl.description,
-            is_fetched = true,
             link_embedding = sl.link_embedding
     WHEN NOT MATCHED THEN
         INSERT (
@@ -14,9 +13,9 @@ MERGE_LINK_SQL = """
             url,
             title,
             description,
-            created_by,
+            created_by_user_id,
+            created_by_username,
             created_at,
-            is_fetched,
             link_embedding
         )
         VALUES (
@@ -24,11 +23,11 @@ MERGE_LINK_SQL = """
             sl.url,
             sl.title,
             sl.description,
-            sl.created_by,
+            sl.created_by_user_id,
+            sl.created_by_username,
             sl.created_at,
-            false,
             sl.link_embedding
         );
     """
 
-LINK_STAGING_COLUMNS = ["link_id", "url", "title", "description", "created_by", "created_at", "link_embedding"] # noqa: E501
+LINK_STAGING_COLUMNS = ["link_id", "url", "title", "description", "created_by_user_id", "created_by_username", "created_at", "link_embedding"] # noqa: E501
