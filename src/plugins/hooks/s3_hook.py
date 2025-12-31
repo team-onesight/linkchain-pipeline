@@ -75,3 +75,20 @@ class S3Hook(AWS_S3Hook):
         except Exception as e:
             logging.error("Upload failed:", exc_info=e)
             return False
+
+    def download_bytes(self, key: str) -> bytes:
+        """
+        S3에서 객체를 읽어 바이트 데이터를 반환합니다.
+        """
+
+        bytes_data = super().read_key(
+            key=key,
+            bucket_name=self.bucket_name
+        )
+
+        # 만약 데이터가 bytes 타입이면 문자열로 디코딩
+        # (html_extractor에서 사용하는 정규표현식을 위해)
+        if isinstance(bytes_data, bytes):
+            return bytes_data.decode('utf-8')
+
+        return bytes_data
