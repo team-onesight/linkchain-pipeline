@@ -37,8 +37,9 @@ OLTP_CONFIG = OLTPConfig(
             "source_table": "link",
             "snowflake_table": "ods.link",
             "columns": [
-                "link_id", "url", "title", "description", "views", "is_fetched",
-                "created_by", "created_at", "link_embedding"
+                "link_id", "url", "title", "description", "views",
+                "created_by_user_id", "created_by_username", "created_at",
+                "link_embedding"
             ]
         },
         "user_info": {
