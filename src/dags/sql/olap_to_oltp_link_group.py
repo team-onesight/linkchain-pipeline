@@ -1,12 +1,13 @@
 UPSERT_LINK_GROUP_SQL = """
     INSERT INTO public.link_group (group_title, created_at)
-    SELECT DISTINCT
+    SELECT
         sg.group_title,
-        sg.created_at
+        MIN(sg.created_at) AS created_at
     FROM staging.link_group sg
     LEFT JOIN public.link_group pg
-    ON pg.group_title = sg.group_title
-    WHERE pg.group_id IS NULL;
+        ON pg.group_title = sg.group_title
+    WHERE pg.group_id IS NULL
+    GROUP BY sg.group_title;
     """
 
 LINK_GROUP_MAPPING_SQL = """
