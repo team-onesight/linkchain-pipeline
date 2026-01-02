@@ -1,6 +1,6 @@
 import logging
 
-from hooks.snowflake_base_hook import CustomSnowflakeBaseHook
+from hooks.abc.snowflake_base_hook import CustomSnowflakeBaseHook
 
 
 class SnowflakeCommandHook(CustomSnowflakeBaseHook):
@@ -17,7 +17,7 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
     def __init__(
         self,
         *args,
-        snowflake_conn_id: str = "snowflake_conn",
+        snowflake_conn_id: str = "snowflake_default",
         database: str = None,
         schema: str = None,
         **kwargs,
@@ -105,3 +105,57 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
                 pass
 
             conn.close()
+
+    def merge_combined_sources_to_integrated_table(self):
+        """
+        새로 들어온 user의 url과 크롤링된 url들을 merge합니다.
+        title, desc, tags, embedding DAG들이 이 테이블만 바라보며 update 합니다.
+        테이블(TARGET)에 해당 link_id가 없을 때만 실행됩니다.
+        """
+        with self.get_conn() as conn:
+            cursor = conn.cursor()
+
+            sql = """
+            MERGE INTO linkchain.analytics.integrated_table AS TARGET
+            USING linkchain.raw_data.combined_sources AS SOURCE
+            ON TARGET.link_id = SOURCE.link_id
+
+            WHEN NOT MATCHED THEN
+                INSERT (
+                    link_id,
+                    url,
+                    title,
+                    description,
+                    link_embedding
+                )
+                VALUES (
+                    SOURCE.link_id,
+                    SOURCE.url,
+                    SOURCE.title,
+                    SOURCE.description,
+                    SOURCE.link_embedding
+                );
+            """
+            result = cursor.execute(sql)
+            return result.fetchone()
+
+    def get_integrated_table_where_title_desc_is_null(self):
+        """
+        get links from combined_sources
+        :param self: Description
+        """
+        with self.get_conn() as conn:
+            cursor = conn.cursor()
+
+            sql = """
+            SELECT
+                I.LINK_ID
+                , M.S3_PATH
+            FROM LINKCHAIN.ANALYTICS.INTEGRATED_TABLE I
+            LEFT JOIN LINKCHAIN.RAW_DATA.CRAWLED_HTML_METADATA M
+            ON I.LINK_ID = M.LINK_ID
+            WHERE I.TITLE IS NULL AND I.DESCRIPTION IS NULL
+                AND M.S3_PATH IS NOT NULL;
+            """
+            result = cursor.execute(sql)
+        return result.fetchall()
