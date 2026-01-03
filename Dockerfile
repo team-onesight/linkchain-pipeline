@@ -17,3 +17,5 @@ RUN playwright install-deps chromium
 USER airflow
 RUN playwright install chromium
 
+RUN uv pip install --no-cache "spacy>=3.7.0,<4.0.0"
+RUN python -m spacy download en_core_web_sm

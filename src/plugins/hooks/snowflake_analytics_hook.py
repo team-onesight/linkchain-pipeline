@@ -36,3 +36,25 @@ class SnowflakeAnalyticsQueryHook(CustomSnowflakeBaseHook):
                 rows = cursor.fetchall()
 
         return columns, rows
+
+    def get_urls_without_tags(self):
+        """
+        Tag가 없는 URL 목록을 가져옵니다
+        """
+        with self.get_conn() as conn:
+            cursor = conn.cursor()
+
+            sql = """
+            SELECT 
+                LINK_ID
+            FROM LINKCHAIN.ANALYTICS.INTEGRATED_TABLE
+            WHERE 
+                LINK_ID NOT IN (
+                    SELECT LINK_ID 
+                    FROM LINKCHAIN.ANALYTICS.TAG 
+                )
+                AND TITLE IS NOT NULL 
+                AND DESCRIPTION IS NOT NULL;
+            """
+            result = cursor.execute(sql)
+        return result.fetchall()

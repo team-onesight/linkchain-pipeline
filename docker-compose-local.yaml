@@ -79,6 +79,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/src/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/src/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/src/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-.}/../model:/opt/airflow/model
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
