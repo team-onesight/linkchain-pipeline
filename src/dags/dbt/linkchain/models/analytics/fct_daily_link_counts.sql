@@ -1,6 +1,7 @@
 {{ config(
     materialized='incremental',
     unique_key='created_date',
+    incremental_strategy='delete+insert'
 ) }}
 
 with base_links as (
