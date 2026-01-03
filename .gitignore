@@ -18,3 +18,5 @@ src/logs/
 src/config/
 
 *.iml
+
+logs
