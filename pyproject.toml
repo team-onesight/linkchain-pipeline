@@ -19,8 +19,6 @@ dependencies = [
     "astronomer-cosmos>=1.12.0",
     "transformers>=4.57.3",
     "sentence-transformers>=5.2.0",
-    "tokenizers>=0.22.1",
-    "torch>=2.9.1",
     "keybert>=0.9.0",
     "mecab>=0.996.13",
 ]

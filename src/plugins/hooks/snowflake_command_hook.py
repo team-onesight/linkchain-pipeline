@@ -159,3 +159,46 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
             """
             result = cursor.execute(sql)
         return result.fetchall()
+
+    def merge_integrated_table_to_final_table(self):
+        """
+        integrated_table을 최종 테이블로 merge 합니다.
+        """
+        with self.get_conn() as conn:
+            cursor = conn.cursor()
+            sql = """
+            MERGE INTO LINKCHAIN.ANALYTICS.LINK_CLUSTERED AS target
+            USING (
+                SELECT 
+                    I.LINK_ID,
+                    I.URL,
+                    I.TITLE,
+                    I.DESCRIPTION,
+                    L.HOST,
+                    L.PATH,
+                    L.PARAMETERS,
+                    L.FRAGMENT,
+                    L.CREATED_BY_USER_ID,
+                    L.CREATED_BY_USERNAME,
+                    L.CREATED_AT,
+                    I.LINK_EMBEDDING,
+                    I.IMAGE_URL
+                FROM ANALYTICS.INTEGRATED_TABLE I
+                INNER JOIN ODS.LINK L ON I.LINK_ID = L.LINK_ID
+            ) AS source
+            ON target.LINK_ID = source.LINK_ID
+            WHEN NOT MATCHED THEN
+                INSERT (
+                    LINK_ID, URL, TITLE, DESCRIPTION,
+                    HOST, PATH, PARAMETERS, FRAGMENT,
+                    CREATED_BY_USER_ID, CREATED_BY_USERNAME, CREATED_AT,
+                    LINK_EMBEDDING, IMAGE_URL
+                )
+                VALUES (
+                    source.LINK_ID, source.URL, source.TITLE, source.DESCRIPTION,
+                    source.HOST, source.PATH, source.PARAMETERS, source.FRAGMENT,
+                    source.CREATED_BY_USER_ID, source.CREATED_BY_USERNAME, source.CREATED_AT,
+                    source.LINK_EMBEDDING, source.IMAGE_URL
+                );"""
+            result = cursor.execute(sql)
+            return result.fetchone()

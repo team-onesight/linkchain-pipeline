@@ -37,24 +37,24 @@ class SnowflakeAnalyticsQueryHook(CustomSnowflakeBaseHook):
 
         return columns, rows
 
-    def get_urls_without_tags(self):
+    def get_urls_without_embeddings(self):
         """
-        Tag가 없는 URL 목록을 가져옵니다
+        Tag가 포함된 통합 테이블 데이터를 가져옵니다.
         """
         with self.get_conn() as conn:
             cursor = conn.cursor()
 
             sql = """
             SELECT 
-                LINK_ID
-            FROM LINKCHAIN.ANALYTICS.INTEGRATED_TABLE
-            WHERE 
-                LINK_ID NOT IN (
-                    SELECT LINK_ID 
-                    FROM LINKCHAIN.ANALYTICS.TAG 
-                )
-                AND TITLE IS NOT NULL 
-                AND DESCRIPTION IS NOT NULL;
+                IT.LINK_ID,
+                IT.TITLE,
+                IT.DESCRIPTION,
+                ARRAY_AGG(T.TAG_NAME) AS TAGS
+            FROM LINKCHAIN.ANALYTICS.INTEGRATED_TABLE I
+            INNER JOIN LINKCHAIN.ANALYTICS.TAG T
+                ON I.LINK_ID = T.LINK_ID
+            WHERE I.LINK_EMBEDDING IS NULL
+            GROUP BY I.LINK_ID, I.TITLE, I.DESCRIPTION
             """
             result = cursor.execute(sql)
         return result.fetchall()
