@@ -12,7 +12,7 @@ class CalculateUserEmbeddingsOperator(BaseOperator):
     """
     staging.link_embedding_run의 증분 데이터를 이용하여
     user_embedding running mean을 계산하고
-    analytics.user_embedding_state에 upsert합니다.
+    analytics.user_embedding_state에 upsert하는 Operator
     """
 
     template_fields = ()
@@ -46,7 +46,7 @@ class CalculateUserEmbeddingsOperator(BaseOperator):
 
         hook = PostgresTransactionalHook(postgres_conn_id=self.postgres_conn_id)
 
-        # 1. 증분 link_embedding 조회
+        # incremental link_embedding 조회
         incremental: Dict[int, List[np.ndarray]] = defaultdict(list)
         sql_select = f"""
             SELECT user_id, link_embedding
@@ -61,7 +61,7 @@ class CalculateUserEmbeddingsOperator(BaseOperator):
             self.log.info("No incremental link embeddings found")
             return
 
-        # 2. 문자열 → JSON → numpy float32 array
+        # 평균 계산을 위한 type 변환
         for user_id, embedding in rows:
             try:
                 if isinstance(embedding, str):
@@ -86,7 +86,7 @@ class CalculateUserEmbeddingsOperator(BaseOperator):
 
         user_ids = tuple(incremental.keys())
 
-        # 3. 기존 user_embedding_state 조회
+        # 기존 user_embedding 조회
         existing_map: Dict[int, Tuple[np.ndarray, int]] = {}
         sql_existing = f"""
             SELECT user_id, user_embedding, cnt
@@ -113,7 +113,7 @@ class CalculateUserEmbeddingsOperator(BaseOperator):
                     e,
                 )
 
-        # 4. running mean + L2 normalize
+        # 기존 평균과 incremental에 대한 평균 계산 및 정규화
         upsert_params: List[Tuple] = []
         for user_id, vectors in incremental.items():
             new_cnt = len(vectors)
@@ -132,7 +132,7 @@ class CalculateUserEmbeddingsOperator(BaseOperator):
 
             upsert_params.append((user_id, normalized_vec.tolist(), total_cnt))
 
-        # 5. state upsert
+        # upsert
         upsert_sql = f"""
             INSERT INTO {self.target_schema}.{self.target_table} (
                 user_id,

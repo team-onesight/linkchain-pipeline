@@ -36,7 +36,7 @@ class UpsertUserEmbeddingsOperator(BaseOperator):
         hook = PostgresTransactionalHook(postgres_conn_id=self.postgres_conn_id)
         self.log.info(f"Start upserting user embeddings into {self.target_schema}.{self.target_table}")
 
-        # 1. analytics.user_embedding_state 조회
+        # user_id별로 계산된 user_embedding fetch
         sql_select = f"""
             SELECT user_id, user_embedding
             FROM {self.source_schema}.{self.source_table}
@@ -50,7 +50,6 @@ class UpsertUserEmbeddingsOperator(BaseOperator):
             self.log.info("No user_embedding_state rows found")
             return
 
-        # 2. UPDATE용 파라미터 준비
         update_params: List[Tuple] = []
         for user_id, embedding in rows:
             try:
