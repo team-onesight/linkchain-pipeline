@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: raw_data
+    database: LINKCHAIN
+    schema: raw_data
+    tables:
+      - name: crawl_failure_log
+      - name: crawled_html_metadata
+      - name: url_crawled
+

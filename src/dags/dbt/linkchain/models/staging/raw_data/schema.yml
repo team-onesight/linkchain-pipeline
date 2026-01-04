@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: stg_raw_data__crawl_failure_log
+    description: "Crawl 실패 로그의 Staging 모델"
+    columns:
+      - name: log_id
+        tests:
+          - unique
+          - not_null
+      - name: error_type
+        description: "실패 유형 (HTTP_ERROR, EMPTY, UPLOAD_FAIL, TIMEOUT, UNKNOWN)"
+        data_tests:
+          - accepted_values:
+              values: [ 'HTTP_ERROR', 'EMPTY', 'UPLOAD_FAIL', 'TIMEOUT', 'UNKNOWN' ]
+              quote: true
+              config:
+                where: "created_at >= current_date - interval '3 days'"
+  - name: combined_links
+    description: "CRAWLED_HTML_METADATA와 URL_CRAWLED 테이블을 조인하여 생성된 링크 정보 모델"
+    columns:
+      - name: link_id
+        tests:
+          - unique
+          - not_null
+      - name: url
+        tests:
+          - not_null

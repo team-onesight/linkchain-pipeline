@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: fct_daily_link_counts
+    description: "일별 링크 등록 통계"
+    columns:
+      - name: created_date
+        description: "링크가 등록된 날짜"
+        tests:
+          - unique
+          - not_null
+      - name: total_links_added
+        description: "해당 날짜에 등록된 총 링크 수"
+      - name: unique_links_added
+        description: "해당 날짜에 새로 등록된 고유 링크 수"
