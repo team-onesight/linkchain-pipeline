@@ -22,7 +22,7 @@ class PostgresTransactionalHook(CustomPostgresBaseHook):
             schema=schema,
             **kwargs,
         )
-    
+
     def fetch_all(self, sql: str) -> list[tuple]:
         """
         SELECT 계열 SQL 실행 후 전체 결과를 반환합니다

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import json
 from typing import List, Tuple
 
@@ -34,13 +35,13 @@ class UpsertUserEmbeddingsOperator(BaseOperator):
 
     def execute(self, context):
         hook = PostgresTransactionalHook(postgres_conn_id=self.postgres_conn_id)
-        self.log.info(f"Start upserting user embeddings into {self.target_schema}.{self.target_table}")
+        self.log.info(f"Start upserting user embeddings into {self.target_schema}.{self.target_table}") # noqa: E501
 
         # user_id별로 계산된 user_embedding fetch
         sql_select = f"""
             SELECT user_id, user_embedding
             FROM {self.source_schema}.{self.source_table}
-        """
+        """ # noqa: S608
         with hook.get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(sql_select)
@@ -61,7 +62,7 @@ class UpsertUserEmbeddingsOperator(BaseOperator):
                 vector = np.array(embedding_list, dtype=np.float32)
 
                 if vector.shape[0] != VECTOR_DIM:
-                    self.log.warning("Skipping invalid embedding dim for user_id=%s", user_id)
+                    self.log.warning("Skipping invalid embedding dim for user_id=%s", user_id) # noqa: E501
                     continue
 
                 norm = np.linalg.norm(vector)
@@ -71,7 +72,7 @@ class UpsertUserEmbeddingsOperator(BaseOperator):
                 normalized = (vector / norm).tolist()
                 update_params.append((normalized, user_id))
             except Exception as e:
-                self.log.warning("Skipping invalid embedding for user_id=%s: %s", user_id, e)
+                self.log.warning("Skipping invalid embedding for user_id=%s: %s", user_id, e) # noqa: E501
                 continue
 
         if not update_params:
@@ -83,7 +84,7 @@ class UpsertUserEmbeddingsOperator(BaseOperator):
             UPDATE {self.target_schema}.{self.target_table}
             SET user_embedding = %s
             WHERE user_id = %s
-        """
+        """ # noqa: S608
         with hook.get_conn() as conn:
             with conn.cursor() as cur:
                 cur.executemany(sql_update, update_params)

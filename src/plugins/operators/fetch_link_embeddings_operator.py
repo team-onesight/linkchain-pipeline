@@ -1,7 +1,7 @@
 from datetime import timedelta
+
 from airflow.sdk.bases.operator import BaseOperator
 from airflow.utils.context import Context
-
 from hooks.postgres_transactional_hook import PostgresTransactionalHook
 
 
@@ -47,7 +47,7 @@ class FetchLinkEmbeddingsOperator(BaseOperator):
             lum.created_at >= %(start_ts)s
             AND lum.created_at <  %(end_ts)s
             AND l.link_embedding IS NOT NULL;
-        """
+        """ # noqa: S608
 
     def execute(self, context: Context):
         hook = PostgresTransactionalHook(

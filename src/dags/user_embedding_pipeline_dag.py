@@ -1,17 +1,15 @@
 from datetime import datetime, timedelta
 
-from airflow import DAG
-
-from operators.fetch_link_embeddings_operator import (
-    FetchLinkEmbeddingsOperator,
-)
+from airflow.sdk import DAG
 from operators.calculate_user_embeddings_operator import (
     CalculateUserEmbeddingsOperator,
+)
+from operators.fetch_link_embeddings_operator import (
+    FetchLinkEmbeddingsOperator,
 )
 from operators.upsert_user_embeddings_operator import (
     UpsertUserEmbeddingsOperator,
 )
-
 
 with DAG(
     dag_id="user_embedding_pipeline",

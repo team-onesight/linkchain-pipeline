@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 import json
 from collections import defaultdict
-from typing import Dict, Tuple, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 from airflow.sdk.bases.operator import BaseOperator
@@ -51,7 +52,7 @@ class CalculateUserEmbeddingsOperator(BaseOperator):
         sql_select = f"""
             SELECT user_id, link_embedding
             FROM {self.source_schema}.{self.source_table}
-        """
+        """ # noqa: S608
         with hook.get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(sql_select)
@@ -92,7 +93,7 @@ class CalculateUserEmbeddingsOperator(BaseOperator):
             SELECT user_id, user_embedding, cnt
             FROM {self.target_schema}.{self.target_table}
             WHERE user_id IN %s
-        """
+        """ # noqa: S608
         with hook.get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(sql_existing, (user_ids,))
@@ -104,7 +105,7 @@ class CalculateUserEmbeddingsOperator(BaseOperator):
                     embedding_list = json.loads(embedding)
                 else:
                     embedding_list = embedding
-                existing_map[user_id] = (np.array(embedding_list, dtype=np.float32), cnt)
+                existing_map[user_id] = (np.array(embedding_list, dtype=np.float32), cnt) # noqa: E501
             except Exception as e:
                 self.log.warning(
                     "Skipping invalid existing embedding for user_id=%s: %s (%s)",
@@ -146,7 +147,7 @@ class CalculateUserEmbeddingsOperator(BaseOperator):
                 user_embedding = EXCLUDED.user_embedding,
                 cnt = EXCLUDED.cnt,
                 updated_at = now()
-        """
+        """ # noqa: S608
         with hook.get_conn() as conn:
             with conn.cursor() as cur:
                 cur.executemany(upsert_sql, upsert_params)
