@@ -2,13 +2,12 @@
 set -e
 cd "$(dirname "$0")"
 
+echo "=== [Cleanup] Removing previous 'airflow-init' container ==="
 
-echo "=== Stop Docker Container (triggerer, init) ==="
-docker ps -a -q --filter "name=airflow-triggerer" \
---filter "name=airflow-init" | xargs -r sudo docker stop || true
-echo "=== Remove Docker Container (triggerer, init) ==="
-docker ps -a -q --filter "name=airflow-triggerer" \
---filter "name=airflow-init" | xargs -r sudo docker rm || true
+docker-compose \
+  -f ../docker-compose-prod.yaml \
+  --env-file ../.env.prod \
+  rm -f -s -v airflow-init
 
 echo "=== Ensuring Airflow Triggerer is up and running ==="
 docker-compose \

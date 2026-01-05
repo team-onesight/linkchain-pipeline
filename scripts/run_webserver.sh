@@ -2,12 +2,12 @@
 set -e
 cd "$(dirname "$0")"
 
-echo "=== Stop Docker Container (apiserver, init) ==="
-docker ps -a -q --filter "name=airflow-apiserver" \
---filter "name=airflow-init" | xargs -r sudo docker stop || true
-echo "=== Remove Docker Container (apiserver, init) ==="
-docker ps -a -q --filter "name=airflow-apiserver" \
---filter "name=airflow-init" | xargs -r sudo docker rm || true
+echo "=== [Cleanup] Removing previous 'airflow-init' container ==="
+
+docker-compose \
+  -f ../docker-compose-prod.yaml \
+  --env-file ../.env.prod \
+  rm -f -s -v airflow-init
 
 echo "=== Ensuring Airflow Webserver is up and running ==="
 docker-compose \

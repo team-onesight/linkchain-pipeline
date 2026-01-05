@@ -2,14 +2,18 @@
 set -e
 cd "$(dirname "$0")"
 
+echo "============================================"
+echo "   [STEP 1] DOCKER CLEANUP & RESET START    "
+echo "============================================"
 
-echo "=== Stop All Airflow Docker Containers ==="
-docker ps -a -q --filter "name=linkchain-pipeline_airflow" \
---filter "name=airflow-init" | xargs -r sudo docker stop || true
-echo "=== Stop All Airflow Docker Containers ==="
-docker ps -a -q --filter "name=linkchain-pipeline_airflow" \
---filter "name=airflow-init" | xargs -r sudo docker rm || true
+echo ">>> Stop & Remove Existing Containers..."
+docker ps -a -q --filter "name=linkchain" --filter "name=airflow" | xargs -r sudo docker stop || true
+docker ps -a -q --filter "name=linkchain" --filter "name=airflow" | xargs -r sudo docker rm || true
 
-echo "=== Remove unused DockerContainers, BuildCache ==="
+echo ">>> Pruning Docker System (Freeing up Disk Space)..."
 sudo docker system prune -a -f
 sudo docker builder prune -a -f
+
+echo "============================================"
+echo "   [STEP 1] CLEANUP COMPLETED! CHECK DISK   "
+echo "============================================"

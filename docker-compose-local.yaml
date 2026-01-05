@@ -51,6 +51,7 @@ x-airflow-common:
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose-local.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
   build: .
+  image: linkchain-airflow:latest
   env_file:
     - .env.local
   environment:
