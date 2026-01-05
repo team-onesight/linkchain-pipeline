@@ -1,8 +1,7 @@
 from datetime import datetime
 
 from airflow.providers.standard.operators.empty import EmptyOperator
-from airflow.sdk import DAG
-from airflow.utils.task_group import TaskGroup
+from airflow.sdk import DAG, TaskGroup
 from operators.create_mapping_operator import CreateMappingOperator
 from operators.olap_to_staging_operator import OlapToStagingOperator
 from operators.staging_to_target_operator import StagingToTargetOperator

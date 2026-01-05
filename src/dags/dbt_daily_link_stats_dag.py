@@ -35,7 +35,7 @@ dbt_daily_link_stats = DbtDag(
     start_date=datetime(2025, 12, 1),
     schedule="@daily",
     catchup=False,
-    tags={"linkchain", "stats", "marts"},
+    tags={"summary", "stats", "marts"},
     operator_args={
         "vars": {"check_date": "{{ ds }}"},
     },
