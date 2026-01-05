@@ -12,7 +12,7 @@ WITH ods_links AS (
       , description
       , link_embedding
       , created_at
-    FROM {{ ref('stg_ods__link') }}
+    FROM {{ ref('stg_ods__link_by_user') }}
 ),
 
 raw_urls AS (
@@ -24,7 +24,7 @@ SELECT
   , NULL AS description
   , NULL AS link_embedding
   , created_at
-FROM {{ ref('stg_raw_data__url_crawled') }}
+FROM {{ ref('stg_raw_data__url_crawled') }} 
     )
 
 SELECT * FROM ods_links
