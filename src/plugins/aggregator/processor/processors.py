@@ -1,6 +1,12 @@
 import polars as pl
 from aggregator.processor.abc.base_strategy import BaseStrategy
-from aggregator.processor.params import KeywordParams, TagMatchParams, VectorParams
+from aggregator.processor.params import (
+    CompositeParams,
+    KeywordParams,
+    TagMatchParams,
+    UrlMatchParams,
+)
+from airflow.exceptions import AirflowSkipException
 
 
 class KeywordStrategy(BaseStrategy):
@@ -79,20 +85,90 @@ class TagMatchStrategy(BaseStrategy):
         return df.filter(final_filter)
 
 
-class VectorStrategy(BaseStrategy):
+class UrlMatchStrategy(BaseStrategy):
     """
-    벡터 유사도 기반 필터링 전략
-    1. threshold: float - 유사도 임계값 (0.0 ~ 1.0)
-    2. ref_content_id: str - 참조 콘텐츠 ID
-    3. title, description 컬럼에서 벡터 유사도 계산 후 필터링
-    4. (현재는 더미 구현으로 상위 5개 행 반환)
+    URL 기반 필터링 전략
+    1. url_patterns: List[str] - URL에 포함될 문자열(도메인, 경로 등)
+    2. operator: Literal["AND", "OR"] - 패턴 결합 방식
+    3. url 컬럼에서 패턴 검색 (대소문자 무시)
     """
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def process(self, df: pl.DataFrame, params: dict) -> pl.DataFrame:
-        config = VectorParams(**params)
-        print(f"DEBUG: Vector Search 실행 (Threshold: {config.threshold})")
-        # TODO: 실제 벡터 유사도 계산 로직 구현
-        return df.head(5)
+        config = UrlMatchParams(**params)
+
+        if "url" not in df.columns:
+            self.log.warning("[UrlMatchStrategy] 'url' column not found in DataFrame.")
+            return df.clear()
+
+        url_filters = []
+
+        for pattern in config.url_patterns:
+            match_expr = pl.col("url").str.contains(f"(?i){pattern}")
+            url_filters.append(match_expr)
+
+        if config.operator == "AND":
+            final_filter = pl.all_horizontal(url_filters)
+        else:
+            final_filter = pl.any_horizontal(url_filters)
+
+        return df.filter(final_filter)
+
+
+class CompositeStrategy(BaseStrategy):
+    """
+    여러 전략을 조합하여 실행하는 복합 전략
+    예: (Keyword 필터링) AND (URL 필터링)
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.strategy_map = {
+            "KEYWORD": KeywordStrategy,
+            "TAG_MATCH": TagMatchStrategy,
+            "URL_MATCH": UrlMatchStrategy,
+        }
+
+    def process(self, df: pl.DataFrame, params: dict) -> pl.DataFrame:
+        config = CompositeParams(**params)
+
+        if df.is_empty():
+            return df
+
+        if config.operator == "AND":
+            current_df = df
+            for rule in config.rules:
+                strategy_cls = self.strategy_map.get(rule.rule_type)
+                if not strategy_cls:
+                    self.log.error(
+                        f"Unknown rule type in CompositeStrategy: {rule.rule_type}"
+                    )
+                    raise AirflowSkipException(f"Unknown rule type: {rule.rule_type}")
+
+                strategy_instance = strategy_cls()
+                current_df = strategy_instance.process(current_df, rule.rule_params)
+
+                if current_df.is_empty():
+                    return current_df
+
+            return current_df
+
+        else:
+            result_dfs = []
+            for rule in config.rules:
+                strategy_cls = self.strategy_map.get(rule.rule_type)
+                if not strategy_cls:
+                    continue
+
+                strategy_instance = strategy_cls()
+                filtered = strategy_instance.process(df, rule.rule_params)
+                if not filtered.is_empty():
+                    result_dfs.append(filtered)
+
+            if not result_dfs:
+                return df.clear()
+
+            merged_df = pl.concat(result_dfs)
+            return merged_df.unique(subset=["link_id"])

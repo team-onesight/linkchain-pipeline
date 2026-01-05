@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: ods
+    database: LINKCHAIN
+    schema: ods
+    tables:
+      - name: link
+      - name: link_group
+      - name: link_group_link_map
+      - name: link_history
+      - name: link_tag_map
+      - name: link_user_map
+      - name: tag
+      - name: user_info
