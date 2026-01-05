@@ -1,6 +1,6 @@
-from typing import List, Literal
+from typing import Any, Dict, List, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, field_validator
 
 
 class BaseRuleParams(BaseModel):
@@ -29,6 +29,21 @@ class TagMatchParams(BaseRuleParams):
         return v
 
 
-class VectorParams(BaseRuleParams):
-    threshold: float = Field(..., ge=0.0, le=1.0)
-    ref_content_id: str
+class UrlMatchParams(BaseRuleParams):
+    url_patterns: List[str]
+    operator: Literal["AND", "OR"] = "OR"
+
+
+class SubRuleConfig(BaseModel):
+    rule_type: str
+    rule_params: Dict[str, Any]
+
+
+class CompositeParams(BaseModel):
+    """
+    operator: "AND" (모든 조건 만족) 또는 "OR" (하나라도 만족)
+    rules: 적용할 하위 규칙 리스트
+    """
+
+    operator: Literal["AND", "OR"] = "AND"
+    rules: List[SubRuleConfig]
