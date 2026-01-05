@@ -174,10 +174,6 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
                     I.URL,
                     I.TITLE,
                     I.DESCRIPTION,
-                    L.HOST,
-                    L.PATH,
-                    L.PARAMETERS,
-                    L.FRAGMENT,
                     L.CREATED_BY_USER_ID,
                     L.CREATED_BY_USERNAME,
                     L.CREATED_AT,
@@ -187,16 +183,20 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
                 INNER JOIN ODS.LINK L ON I.LINK_ID = L.LINK_ID
             ) AS source
             ON target.LINK_ID = source.LINK_ID
+            WHEN MATCHED THEN
+                UPDATE SET
+                    target.LINK_EMBEDDING = source.LINK_EMBEDDING,
+                    target.IMAGE_URL = source.IMAGE_URL,
+                    target.TITLE = source.TITLE,
+                    target.DESCRIPTION = source.DESCRIPTION
             WHEN NOT MATCHED THEN
                 INSERT (
                     LINK_ID, URL, TITLE, DESCRIPTION,
-                    HOST, PATH, PARAMETERS, FRAGMENT,
                     CREATED_BY_USER_ID, CREATED_BY_USERNAME, CREATED_AT,
                     LINK_EMBEDDING, IMAGE_URL
                 )
                 VALUES (
                     source.LINK_ID, source.URL, source.TITLE, source.DESCRIPTION,
-                    source.HOST, source.PATH, source.PARAMETERS, source.FRAGMENT,
                     source.CREATED_BY_USER_ID, source.CREATED_BY_USERNAME,
                     source.CREATED_AT, source.LINK_EMBEDDING, source.IMAGE_URL
                 );"""

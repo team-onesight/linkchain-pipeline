@@ -60,3 +60,25 @@ class SnowflakeAnalyticsQueryHook(CustomSnowflakeBaseHook):
             """
             result = cursor.execute(sql)
         return result.fetchall()
+
+    def get_urls_without_embeddings(self):
+        """
+        임베딩이 없는 통합 테이블을 가져옵니다.
+        """
+        with self.get_conn() as conn:
+            cursor = conn.cursor()
+
+            sql = """
+            SELECT
+                I.LINK_ID,
+                I.TITLE,
+                I.DESCRIPTION,
+                ARRAY_AGG(T.TAG_NAME) AS TAGS
+            FROM LINKCHAIN.ANALYTICS.INTEGRATED_TABLE I
+            INNER JOIN LINKCHAIN.ANALYTICS.TAG T
+                ON I.LINK_ID = T.LINK_ID
+            WHERE I.LINK_EMBEDDING IS NULL
+            GROUP BY I.LINK_ID, I.TITLE, I.DESCRIPTION
+            """
+            result = cursor.execute(sql)
+        return result.fetchall()
