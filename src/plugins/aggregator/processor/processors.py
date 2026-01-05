@@ -125,14 +125,14 @@ class CompositeStrategy(BaseStrategy):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.strategy_map = {
-            "KEYWORD": KeywordStrategy,
-            "TAG_MATCH": TagMatchStrategy,
-            "URL_MATCH": UrlMatchStrategy,
-        }
 
     def process(self, df: pl.DataFrame, params: dict) -> pl.DataFrame:
         config = CompositeParams(**params)
+        strategy_map = {
+            "KEYWORD_MATCH": KeywordStrategy,
+            "TAG_MATCH": TagMatchStrategy,
+            "URL_MATCH": UrlMatchStrategy,
+        }
 
         if df.is_empty():
             return df
@@ -140,7 +140,7 @@ class CompositeStrategy(BaseStrategy):
         if config.operator == "AND":
             current_df = df
             for rule in config.rules:
-                strategy_cls = self.strategy_map.get(rule.rule_type)
+                strategy_cls = strategy_map.get(rule.rule_type)
                 if not strategy_cls:
                     self.log.error(
                         f"Unknown rule type in CompositeStrategy: {rule.rule_type}"
@@ -158,7 +158,7 @@ class CompositeStrategy(BaseStrategy):
         else:
             result_dfs = []
             for rule in config.rules:
-                strategy_cls = self.strategy_map.get(rule.rule_type)
+                strategy_cls = strategy_map.get(rule.rule_type)
                 if not strategy_cls:
                     continue
 
