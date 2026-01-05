@@ -3,11 +3,34 @@ import logging
 import time
 
 from airflow.sdk import DAG, task
+from cosmos import (
+    DbtTaskGroup,
+    ExecutionConfig,
+    ExecutionMode,
+    ProfileConfig,
+    ProjectConfig,
+    RenderConfig,
+)
+from cosmos.profiles import SnowflakeUserPasswordProfileMapping
 from extractor.html_extractor import extract_records_from_html
 from hooks.s3_hook import S3Hook
 from hooks.snowflake_command_hook import SnowflakeCommandHook
 
 logger = logging.getLogger(__name__)
+
+DBT_PROJECT_PATH = "/opt/airflow/dags/dbt/linkchain"
+DBT_EXECUTABLE_PATH = "/opt/airflow/dbt_venv/bin/dbt"
+
+project_config = ProjectConfig(dbt_project_path=DBT_PROJECT_PATH)
+profile_config = ProfileConfig(
+    profile_name="linkchain",
+    target_name="prod",
+    profile_mapping=SnowflakeUserPasswordProfileMapping(conn_id="snowflake_default"),
+)
+execution_config = ExecutionConfig(
+    dbt_executable_path=DBT_EXECUTABLE_PATH,
+    execution_mode=ExecutionMode.LOCAL,
+)
 
 @task
 def merge_combined_sources_to_integrated_table() -> int:
@@ -18,7 +41,7 @@ def merge_combined_sources_to_integrated_table() -> int:
     return count
 
 @task
-def get_urls_without_title_desc(**context) -> str:
+def get_urls_without_title_desc_image_url(**context) -> str: # 함수명에 image_url 추가
     """Title/Desc가 NULL인 대상 목록 가져오기"""
     snowflake_hook = SnowflakeCommandHook()
     urls = snowflake_hook.get_integrated_table_where_title_desc_is_null()
@@ -42,7 +65,7 @@ def get_urls_without_title_desc(**context) -> str:
     return tmp_key_path
 
 @task
-def extract_title_desc(**context)-> str:
+def extract_title_desc_image_url(**context)-> str: # 함수명에 image_url 추가
     """S3에서 HTML 다운로드 및 정보 추출"""
     s3hook = S3Hook(bucket_name='de7-team1')
     ti = context['ti']
@@ -50,7 +73,7 @@ def extract_title_desc(**context)-> str:
     json_string = s3hook.download_bytes(tmp_key_path)
     link_id_with_s3_path = json.loads(json_string)
 
-    link_id_with_title_desc = []
+    link_id_with_title_desc_image_url = [] # 변수명에 image_url 추가
     start = time.time()
     logger.info(
         f'Extracting {len(link_id_with_s3_path)} data\'s title and descriptions'
@@ -58,11 +81,11 @@ def extract_title_desc(**context)-> str:
 
     for link_id, s3_path in link_id_with_s3_path:
         html = s3hook.download_bytes(s3_path)
-        title, description = extract_records_from_html(html)
+        title, description, image_url = extract_records_from_html(html) # image_url 변수 추가, method에서도 image_url return같이 해줘야함
         if title is not None:
-            link_id_with_title_desc.append((title, description, link_id))
+            link_id_with_title_desc_image_url.append((title, description, image_url, link_id)) # image_url 추가
 
-    bytes_data = json.dumps(link_id_with_title_desc).encode('utf-8')
+    bytes_data = json.dumps(link_id_with_title_desc_image_url).encode('utf-8')
     ds_nodash = context['ds_nodash']
     tmp_key_path = f'tmp/title_desc_url_{ds_nodash}.json'
 
@@ -72,9 +95,9 @@ def extract_title_desc(**context)-> str:
         replace=True
     )
 
-    logger.info(f'{len(link_id_with_title_desc)} data waiting for update')
+    logger.info(f'{len(link_id_with_title_desc_image_url)} data waiting for update')
     logger.info(
-        f'excluded {len(link_id_with_s3_path)-len(link_id_with_title_desc)} data'
+        f'excluded {len(link_id_with_s3_path)-len(link_id_with_title_desc_image_url)} data'
     )
     logger.info(f'execute time : {time.time() - start:.2f}s')
     logger.info(f'tmp file saved on: {tmp_key_path}')
@@ -93,10 +116,11 @@ def update_to_integrated_table(**context) -> int:
         UPDATE LINKCHAIN.ANALYTICS.INTEGRATED_TABLE
         SET
             TITLE = %s,
-            DESCRIPTION = %s
+            DESCRIPTION = %s,
+            IMAGE_URL = %s
         WHERE
             LINK_ID = %s
-    """
+    """ # image_url 필드 추가
     hook = SnowflakeCommandHook()
     start = time.time()
     with hook.get_conn() as conn:
@@ -116,7 +140,19 @@ with DAG(
     start_date=None,
     catchup=False,
 ) as dag:
+    
+    create_view_link_need_to_be_fetched = DbtTaskGroup(
+        project_config=project_config,
+        profile_config=profile_config,
+        execution_config=execution_config,
+        group_id="dbt_create_view_link_need_to_be_fetched",
+        render_config=RenderConfig(
+            select=["+combined_links"],
+        ),
+    )
+
+    create_view_link_need_to_be_fetched >> \
     merge_combined_sources_to_integrated_table() >> \
-    get_urls_without_title_desc() >> \
-    extract_title_desc() >> \
+    get_urls_without_title_desc_image_url() >> \
+    extract_title_desc_image_url() >> \
     update_to_integrated_table()

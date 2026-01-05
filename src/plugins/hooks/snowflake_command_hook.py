@@ -117,7 +117,7 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
 
             sql = """
             MERGE INTO linkchain.analytics.integrated_table AS TARGET
-            USING linkchain.raw_data.combined_sources AS SOURCE
+            USING linkchain.raw_data.combined_links AS SOURCE
             ON TARGET.link_id = SOURCE.link_id
 
             WHEN NOT MATCHED THEN
