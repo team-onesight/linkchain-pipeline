@@ -1,8 +1,7 @@
 import json
 import logging
-import time
-import pandas as pd
 import os
+import time
 
 from airflow.sdk import DAG, task
 from hooks.s3_hook import S3Hook
@@ -17,7 +16,7 @@ def extract_embedding(**context):
     """임베딩이 없는 url 가져오기"""
     snowflake_hook = SnowflakeAnalyticsQueryHook()
     urls_without_embedding = snowflake_hook.get_urls_without_embeddings()
-    
+
     logger.info(
         f'Extracting {len(urls_without_embedding)} data\'s embedding'
     )
@@ -31,19 +30,19 @@ def extract_embedding(**context):
         model.save(model_path)
 
     embedding_model = SentenceTransformer(model_path)
-    
+
     input_strings = [
         f'{title} {description} {' '.join(tags)}'
         for _, title, description, tags in urls_without_embedding
     ]
-    
+
     embeddings = embedding_model.encode(input_strings)
-    
+
     embedding_with_link_id = [
         (embedding.tolist(), row[0])
-        for row, embedding in zip(urls_without_embedding, embeddings)
+        for row, embedding in zip(urls_without_embedding, embeddings, strict=True)
     ]
-    
+
     s3hook = S3Hook(bucket_name='de7-team1')
     ds_nodash = context['ds_nodash']
     bytes_data = json.dumps(embedding_with_link_id).encode('utf-8')

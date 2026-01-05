@@ -60,7 +60,7 @@ class SnowflakeAnalyticsQueryHook(CustomSnowflakeBaseHook):
             """
             result = cursor.execute(sql)
         return result.fetchall()
-    
+
     def get_urls_without_embeddings(self):
         """
         임베딩이 없는 통합 테이블을 가져옵니다.
@@ -69,7 +69,7 @@ class SnowflakeAnalyticsQueryHook(CustomSnowflakeBaseHook):
             cursor = conn.cursor()
 
             sql = """
-            SELECT 
+            SELECT
                 I.LINK_ID,
                 I.TITLE,
                 I.DESCRIPTION,
