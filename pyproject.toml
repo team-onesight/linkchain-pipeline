@@ -22,6 +22,7 @@ dependencies = [
     "keybert>=0.9.0",
     "mecab-python3>=1.0.12",
     "mecab-ko-dic>=1.0.0",
+    "bs4>=0.0.2",
 ]
 
 [dependency-groups]

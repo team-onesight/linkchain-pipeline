@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: stg_ods__link_by_user
+    description: "사용자가 등록한 링크의 Staging 모델"
+    columns:
+      - name: link_id
+        description: "링크 고유 식별자"
+        tests:
+          - unique
+          - not_null
+      - name: created_by_user_id
+        description: "링크를 생성한 사용자 ID"
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+                where: "created_at >= current_timestamp - interval '7 days'"
