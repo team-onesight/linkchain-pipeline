@@ -2,6 +2,7 @@ import html as _html
 import re
 from typing import Optional
 
+from bs4 import BeautifulSoup
 import trafilatura
 
 
@@ -116,6 +117,48 @@ def extract_description_from_html(html_text: str) -> Optional[str]:
     return infer_description_from_text(html_text)
 
 
+def extract_image_url_from_html(html_text: str) -> Optional[str]:
+    """
+    HTML 문자열에서 대표 image URL을 추출하는 메소드
+
+    우선순위를 달리하여 순차적으로 og부터 단순 image_src까지 추출 시도 후 없으면 None 반환
+    1. trafilatura.extract_metadata().image
+    2. og:image (bs4 + lxml)
+    3. twitter:image
+    4. link[rel="image_src"]
+
+    :param html_text: HTML 텍스트
+    :return: image URL | None
+    """
+    if not html_text:
+        return None
+    
+    # 우선순위: trafilatura 사용
+    try:
+        metadata = trafilatura.extract_metadata(html_text)
+        if metadata and metadata.image:
+            return metadata.image.strip()
+    except Exception:
+        pass
+
+    # 차선: bs4 사용
+    soup = BeautifulSoup(html_text, "lxml")
+
+    og_image = soup.find("meta", property="og:image")
+    if og_image and og_image.get("content"):
+        return og_image["content"].strip()
+
+    twitter_image = soup.find("meta", attrs={"name": "twitter:image"})
+    if twitter_image and twitter_image.get("content"):
+        return twitter_image["content"].strip()
+
+    link_image = soup.find("link", rel="image_src")
+    if link_image and link_image.get("href"):
+        return link_image["href"].strip()
+
+    return None
+
+
 def extract_records_from_html(html_text: str) -> tuple:
     """
     directory에서 HTML 파일을 추출하여 튜플로 반환
@@ -127,5 +170,6 @@ def extract_records_from_html(html_text: str) -> tuple:
     """
     title = extract_title_from_html(html_text)
     description = extract_description_from_html(html_text)
+    image_url = extract_image_url_from_html(html_text)
 
-    return title, description
+    return title, description, image_url
