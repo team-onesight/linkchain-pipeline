@@ -1,9 +1,9 @@
+import gc
 import json
 import logging
 import time
-import pandas as pd
-import gc
 
+import pandas as pd
 from airflow.sdk import DAG, task
 from extractor.tag_extractor import generate_multilang_tags
 from hooks.s3_hook import S3Hook
@@ -44,7 +44,10 @@ def extract_tags(chunk_size:int = 100, **context):
     json_string = s3hook.download_bytes(tmp_key_path)
     link_id_without_tags = json.loads(json_string)
 
-    title_desc_df = pd.DataFrame(link_id_without_tags, columns=['link_id', 'title', 'description'])
+    title_desc_df = pd.DataFrame(
+        link_id_without_tags,
+        columns=['link_id', 'title', 'description']
+        )
 
     link_id_with_tags = []
 

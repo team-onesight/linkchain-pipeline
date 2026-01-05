@@ -169,7 +169,7 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
             sql = """
             MERGE INTO LINKCHAIN.ANALYTICS.LINK_CLUSTERED AS target
             USING (
-                SELECT 
+                SELECT
                     I.LINK_ID,
                     I.URL,
                     I.TITLE,
@@ -197,8 +197,8 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
                 VALUES (
                     source.LINK_ID, source.URL, source.TITLE, source.DESCRIPTION,
                     source.HOST, source.PATH, source.PARAMETERS, source.FRAGMENT,
-                    source.CREATED_BY_USER_ID, source.CREATED_BY_USERNAME, source.CREATED_AT,
-                    source.LINK_EMBEDDING, source.IMAGE_URL
+                    source.CREATED_BY_USER_ID, source.CREATED_BY_USERNAME,
+                    source.CREATED_AT, source.LINK_EMBEDDING, source.IMAGE_URL
                 );"""
             result = cursor.execute(sql)
             return result.fetchone()

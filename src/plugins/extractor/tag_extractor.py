@@ -1,12 +1,13 @@
+import logging
+import os
 import re
+
+import MeCab
+import mecab_ko_dic
 import pandas as pd
+import spacy
 from keybert import KeyBERT
 from sentence_transformers import SentenceTransformer
-import spacy
-import MeCab
-import os
-import logging
-import mecab_ko_dic
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ def detect_language(text: str) -> str:
 def extract_korean_nouns(text: str) -> list[str]:
     """
     extract_korean_nouns의 Docstring
-    
+
     :param text: 입력 텍스트
     :type text: str
     :return: 태그리스트
@@ -160,7 +161,7 @@ def generate_multilang_tags(
 ) -> pd.DataFrame:
     """
     title_desc_df에서 다국어 태그 생성
-    
+
     :param title_desc_df: DataFrame with {link_id, title, description}
     :type title_desc_df: pd.DataFrame
     :param top_n_phrases: 키워드 추출 시도 개수
@@ -173,7 +174,7 @@ def generate_multilang_tags(
     model_path = "/opt/airflow/model"
     model_name = "paraphrase-multilingual-mpnet-base-v2"
 
-    # 모델이 없다면 다운로드 
+    # 모델이 없다면 다운로드
     if not os.path.exists(model_path) or not os.listdir(model_path):
         logger.info(f"Model not found, downloading {model_name}...")
         model = SentenceTransformer(model_name)

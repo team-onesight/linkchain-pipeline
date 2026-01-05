@@ -45,19 +45,18 @@ class SnowflakeAnalyticsQueryHook(CustomSnowflakeBaseHook):
             cursor = conn.cursor()
 
             sql = """
-            SELECT 
+            SELECT
                 LINK_ID,
                 TITLE,
                 DESCRIPTION
             FROM LINKCHAIN.ANALYTICS.INTEGRATED_TABLE
-            WHERE 
+            WHERE
                 LINK_ID NOT IN (
-                    SELECT LINK_ID 
-                    FROM LINKCHAIN.ANALYTICS.TAG 
+                    SELECT LINK_ID
+                    FROM LINKCHAIN.ANALYTICS.TAG
                 )
-                AND TITLE IS NOT NULL 
+                AND TITLE IS NOT NULL
                 AND DESCRIPTION IS NOT NULL;
             """
             result = cursor.execute(sql)
         return result.fetchall()
-    
