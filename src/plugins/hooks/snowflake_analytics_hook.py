@@ -70,9 +70,9 @@ class SnowflakeAnalyticsQueryHook(CustomSnowflakeBaseHook):
 
             sql = """
             SELECT 
-                IT.LINK_ID,
-                IT.TITLE,
-                IT.DESCRIPTION,
+                I.LINK_ID,
+                I.TITLE,
+                I.DESCRIPTION,
                 ARRAY_AGG(T.TAG_NAME) AS TAGS
             FROM LINKCHAIN.ANALYTICS.INTEGRATED_TABLE I
             INNER JOIN LINKCHAIN.ANALYTICS.TAG T
