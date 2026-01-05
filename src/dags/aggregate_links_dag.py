@@ -68,12 +68,10 @@ def _execute_group_processing(rule_row: dict):
                 pl.lit(group_code).alias("group_code"),
             )
 
-            row_count = final_df.height
+            row_count = final_df.count()
             logger.info(f"{row_count} rows matched for group {group_code}")
 
-            # --- [TODO: DB 적재 로직] ---
-
-            logger.info(final_df.head())
+            hook.merge_link_groups(final_df, target_table="ANALYTICS.LINK_GROUP")
 
         else:
             raise AirflowSkipException("no rows matched the criteria.")
