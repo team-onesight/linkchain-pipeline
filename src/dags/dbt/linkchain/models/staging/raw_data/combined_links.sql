@@ -8,6 +8,7 @@ WITH ods_links AS (
         link_id
       , url
       , title
+      , image_url
       , description
       , link_embedding
       , created_at
@@ -19,6 +20,7 @@ SELECT
     link_id
   , url
   , NULL AS title
+  , NULL AS image_url
   , NULL AS description
   , NULL AS link_embedding
   , created_at
