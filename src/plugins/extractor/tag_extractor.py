@@ -4,6 +4,11 @@ from keybert import KeyBERT
 from sentence_transformers import SentenceTransformer
 import spacy
 import MeCab
+import os
+import logging
+import mecab_ko_dic
+
+logger = logging.getLogger(__name__)
 
 #####################
 UNIT_TOKENS = {
@@ -32,15 +37,11 @@ TECH_KEYWORDS = {
 }
 
 #####################
-_MECAB = MeCab.Tagger()
+dic_path = mecab_ko_dic.DICDIR
+_MECAB = MeCab.Tagger(f"-d {dic_path}")
 
 
 _SPACY_NLP = spacy.load("en_core_web_sm")
-
-embedding_model = SentenceTransformer(
-    "/opt/airflow/model"
-)
-kw_model = KeyBERT(model=embedding_model)
 #####################
 
 def detect_language(text: str) -> str:
@@ -169,6 +170,18 @@ def generate_multilang_tags(
     :return: DataFrame with { link_id, title, description, tags }
     :rtype: pd.DataFrame
     """
+    model_path = "/opt/airflow/model"
+    model_name = "paraphrase-multilingual-mpnet-base-v2"
+
+    # 모델이 없다면 다운로드 
+    if not os.path.exists(model_path) or not os.listdir(model_path):
+        logger.info(f"Model not found, downloading {model_name}...")
+        model = SentenceTransformer(model_name)
+        model.save(model_path)
+
+    embedding_model = SentenceTransformer(model_path)
+    kw_model = KeyBERT(model=embedding_model)
+
     if title_desc_df.empty:
         return pd.DataFrame()
 

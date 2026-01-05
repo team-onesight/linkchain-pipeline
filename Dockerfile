@@ -15,8 +15,14 @@ RUN uv pip install --system \
 
 RUN uv pip install --system -r pyproject.toml
 
-RUN playwright install-deps chromium
+RUN apt-get update && apt-get install -y \
+    mecab \
+    libmecab-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN ln -s /etc/mecabrc /usr/local/etc/mecabrc
+
+RUN playwright install-deps chromium
 
 USER airflow
 RUN playwright install chromium

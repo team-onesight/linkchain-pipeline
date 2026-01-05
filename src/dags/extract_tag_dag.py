@@ -2,6 +2,7 @@ import json
 import logging
 import time
 import pandas as pd
+import gc
 
 from airflow.sdk import DAG, task
 from extractor.tag_extractor import generate_multilang_tags
@@ -12,11 +13,10 @@ from hooks.snowflake_command_hook import SnowflakeCommandHook
 logger = logging.getLogger(__name__)
 
 @task
-def get_urls_without_tags(**context) -> str:
+def get_urls_without_tags(limit:int = 200, **context) -> str:
     """Tag가 없는 대상 목록 가져오기"""
     snowflake_hook = SnowflakeAnalyticsQueryHook()
-    urls = snowflake_hook.get_urls_without_tags()
-    link_id_without_tags = [(row[0]) for row in urls]
+    link_id_without_tags = snowflake_hook.get_urls_without_tags()[:limit]
 
     s3hook = S3Hook(bucket_name='de7-team1')
     ds_nodash = context['ds_nodash']
@@ -36,7 +36,7 @@ def get_urls_without_tags(**context) -> str:
     return tmp_key_path
 
 @task
-def extract_tags(**context):
+def extract_tags(chunk_size:int = 100, **context):
     """Tag 추출"""
     s3hook = S3Hook(bucket_name='de7-team1')
     ti = context['ti']
@@ -46,12 +46,26 @@ def extract_tags(**context):
 
     title_desc_df = pd.DataFrame(link_id_without_tags, columns=['link_id', 'title', 'description'])
 
-    df = generate_multilang_tags(title_desc_df)
+    link_id_with_tags = []
+
+    logger.info(f'Start extracting tags for {len(title_desc_df)} links')
+    for i in range(0, len(title_desc_df), chunk_size):
+        try:
+            df = generate_multilang_tags(title_desc_df[i:i + chunk_size])
+            link_id_with_tags.append(df)
+            logger.info(f'Processed chunk index: {i} ~ {i + chunk_size}')
+        except Exception as e:
+            logger.error(f'Error processing chunk starting at index {i}: {e}')
+            continue
+
+        gc.collect()
+
+    df = pd.concat(link_id_with_tags, ignore_index=True)
     link_id_with_tags = df[['link_id', 'tags']]
 
     s3hook = S3Hook(bucket_name='de7-team1')
     ds_nodash = context['ds_nodash']
-    bytes_data = json.dumps(link_id_with_tags).encode('utf-8')
+    bytes_data = json.dumps(link_id_with_tags.to_json(orient='records')).encode('utf-8')
     tmp_key_path = f'tmp/link_id_with_tags_{ds_nodash}.json'
 
     s3hook.upload_bytes(
@@ -74,13 +88,14 @@ def save_tags(**context):
     json_string = s3hook.download_bytes(tmp_key_path)
     link_id_with_tags = json.loads(json_string)
 
-    exploded_df_list = pd.DataFrame(
-        link_id_with_tags,
-        columns=['link_id', 'tags']
-    ).explode('tags').values.tolist()
+    if isinstance(link_id_with_tags, str):
+        link_id_with_tags = json.loads(link_id_with_tags)
+
+    df = pd.DataFrame(link_id_with_tags)
+    exploded_df_list = df.explode('tags').values.tolist()
 
     sql = """
-        INSERT INTO LINKCHAIN.ANALYTICS.TAG(TAG_NAME, LINK_ID)
+        INSERT INTO LINKCHAIN.ANALYTICS.TAG(LINK_ID, TAG_NAME)
         VALUES (%s, %s)
     """
     hook = SnowflakeCommandHook()
@@ -95,7 +110,7 @@ def save_tags(**context):
             return updated_count
 
 with DAG(
-    dag_id="html_to_title_desc_dag",
+    dag_id="extract_tag_dag",
     schedule="@daily",
     start_date=None,
     catchup=False,
