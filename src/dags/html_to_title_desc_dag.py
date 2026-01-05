@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+from datetime import datetime
 
 from airflow.sdk import DAG, task
 from cosmos import (
@@ -41,7 +42,7 @@ def merge_combined_sources_to_integrated_table() -> int:
     return count
 
 @task
-def get_urls_without_title_desc_image_url(**context) -> str: # 함수명에 image_url 추가
+def get_urls_without_title_desc_image_url(**context) -> str:
     """Title/Desc가 NULL인 대상 목록 가져오기"""
     snowflake_hook = SnowflakeCommandHook()
     urls = snowflake_hook.get_integrated_table_where_title_desc_is_null()
@@ -65,27 +66,33 @@ def get_urls_without_title_desc_image_url(**context) -> str: # 함수명에 imag
     return tmp_key_path
 
 @task
-def extract_title_desc_image_url(**context)-> str: # 함수명에 image_url 추가
+def extract_title_desc_image_url(**context)-> str:
     """S3에서 HTML 다운로드 및 정보 추출"""
     s3hook = S3Hook(bucket_name='de7-team1')
     ti = context['ti']
-    tmp_key_path = ti.xcom_pull(task_ids='get_urls_without_title_desc')
+    tmp_key_path = ti.xcom_pull(task_ids='get_urls_without_title_desc_image_url')
+    if not tmp_key_path:
+        raise ValueError(
+            "XCom pull 실패: get_urls_without_title_desc_image_url 에서 tmp_key_path 없음" # noqa: E501
+        )
     json_string = s3hook.download_bytes(tmp_key_path)
     link_id_with_s3_path = json.loads(json_string)
 
-    link_id_with_title_desc_image_url = [] # 변수명에 image_url 추가
+    link_id_with_title_desc_image_url = []
     start = time.time()
     logger.info(
         f'Extracting {len(link_id_with_s3_path)} data\'s title and descriptions'
     )
 
     for link_id, s3_path in link_id_with_s3_path:
+        logger.info(f'link_id: {link_id}, s3_path: {s3_path}')
         html = s3hook.download_bytes(s3_path)
-        title, description, image_url = extract_records_from_html(html) # image_url 변수 추가, method에서도 image_url return같이 해줘야함
+        title, description, image_url = extract_records_from_html(html)
         if title is not None:
-            link_id_with_title_desc_image_url.append((title, description, image_url, link_id)) # image_url 추가
+            link_id_with_title_desc_image_url.append((title, description, image_url, link_id)) # noqa: E501
 
     bytes_data = json.dumps(link_id_with_title_desc_image_url).encode('utf-8')
+    logger.info(f'bytes_data: {bytes_data}')
     ds_nodash = context['ds_nodash']
     tmp_key_path = f'tmp/title_desc_url_{ds_nodash}.json'
 
@@ -97,7 +104,7 @@ def extract_title_desc_image_url(**context)-> str: # 함수명에 image_url 추�
 
     logger.info(f'{len(link_id_with_title_desc_image_url)} data waiting for update')
     logger.info(
-        f'excluded {len(link_id_with_s3_path)-len(link_id_with_title_desc_image_url)} data'
+        f'excluded {len(link_id_with_s3_path)-len(link_id_with_title_desc_image_url)} data' # noqa: E501
     )
     logger.info(f'execute time : {time.time() - start:.2f}s')
     logger.info(f'tmp file saved on: {tmp_key_path}')
@@ -108,7 +115,11 @@ def update_to_integrated_table(**context) -> int:
     """최종 테이블 업데이트"""
     s3hook = S3Hook(bucket_name='de7-team1')
     ti = context['ti']
-    tmp_key_path = ti.xcom_pull(task_ids='extract_title_desc')
+    tmp_key_path = ti.xcom_pull(task_ids='extract_title_desc_image_url')
+    if not tmp_key_path:
+        raise ValueError(
+            "XCom pull 실패: extract_title_desc_image_url 에서 tmp_key_path 없음"
+        )
     json_string = s3hook.download_bytes(tmp_key_path)
     formatted_data = json.loads(json_string)
 
@@ -120,7 +131,7 @@ def update_to_integrated_table(**context) -> int:
             IMAGE_URL = %s
         WHERE
             LINK_ID = %s
-    """ # image_url 필드 추가
+    """
     hook = SnowflakeCommandHook()
     start = time.time()
     with hook.get_conn() as conn:
@@ -137,10 +148,10 @@ def update_to_integrated_table(**context) -> int:
 with DAG(
     dag_id="html_to_title_desc_dag",
     schedule="@daily",
-    start_date=None,
+    start_date=datetime(2026, 1, 4, 0, 0),
     catchup=False,
 ) as dag:
-    
+
     create_view_link_need_to_be_fetched = DbtTaskGroup(
         project_config=project_config,
         profile_config=profile_config,

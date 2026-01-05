@@ -2,8 +2,8 @@ import html as _html
 import re
 from typing import Optional
 
-from bs4 import BeautifulSoup
 import trafilatura
+from bs4 import BeautifulSoup
 
 
 def extract_title_with_trafilatura(html_text: str) -> Optional[str]:
@@ -89,8 +89,10 @@ def infer_description_from_text(html_text: str, char_limit: int = 400) -> Option
     :rtype: str | None
     """
     text = trafilatura.extract(html_text)
+    if not text:
+        return None
 
-    regex_desc = re.search(r"([^\n\.\?!]{20,}?[\.\?!])", text)
+    regex_desc = re.search(r"([^\n\.\?!]{20,}?[\.\?!])", text) #
     if regex_desc:
         desc = regex_desc.group(1).strip()
         if len(desc) > char_limit:
@@ -114,7 +116,7 @@ def extract_description_from_html(html_text: str) -> Optional[str]:
     description = extract_description_with_trafilatura(html_text)
     if description:
         return description
-    return infer_description_from_text(html_text)
+    return infer_description_from_text(html_text) #
 
 
 def extract_image_url_from_html(html_text: str) -> Optional[str]:
@@ -129,16 +131,16 @@ def extract_image_url_from_html(html_text: str) -> Optional[str]:
 
     :param html_text: HTML 텍스트
     :return: image URL | None
-    """
+    """ # noqa: E501
     if not html_text:
         return None
-    
+
     # 우선순위: trafilatura 사용
     try:
         metadata = trafilatura.extract_metadata(html_text)
         if metadata and metadata.image:
             return metadata.image.strip()
-    except Exception:
+    except Exception: # noqa: S110
         pass
 
     # 차선: bs4 사용
@@ -169,7 +171,7 @@ def extract_records_from_html(html_text: str) -> tuple:
     :rtype: tuple
     """
     title = extract_title_from_html(html_text)
-    description = extract_description_from_html(html_text)
+    description = extract_description_from_html(html_text) #
     image_url = extract_image_url_from_html(html_text)
 
     return title, description, image_url

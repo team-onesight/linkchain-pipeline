@@ -158,7 +158,7 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
             ON I.LINK_ID = M.LINK_ID
             WHERE I.TITLE IS NULL AND I.DESCRIPTION IS NULL AND I.IMAGE_URL IS NULL
                 AND M.S3_PATH IS NOT NULL;
-            """ # I.IMAGE_URL 추가
+            """
             result = cursor.execute(sql)
         return result.fetchall()
 
