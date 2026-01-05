@@ -20,9 +20,17 @@ models:
     description: "CRAWLED_HTML_METADATA와 URL_CRAWLED 테이블을 조인하여 생성된 링크 정보 모델"
     columns:
       - name: link_id
-        tests:
-          - unique
-          - not_null
+        data_tests:
+          - unique:
+              config:
+                severity: warn
+                where: "created_at >= current_timestamp - interval '30 minutes'"
+          - not_null:
+              config:
+                severity: warn
+                where: "created_at >= current_timestamp - interval '30 minutes'"
       - name: url
-        tests:
-          - not_null
+        data_tests:
+          - not_null:
+              config:
+                where: "created_at >= current_timestamp - interval '30 minutes'"

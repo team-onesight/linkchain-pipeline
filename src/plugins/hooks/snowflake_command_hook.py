@@ -117,7 +117,7 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
 
             sql = """
             MERGE INTO linkchain.analytics.integrated_table AS TARGET
-            USING linkchain.raw_data.combined_sources AS SOURCE
+            USING linkchain.raw_data.combined_links AS SOURCE
             ON TARGET.link_id = SOURCE.link_id
 
             WHEN NOT MATCHED THEN
@@ -126,14 +126,16 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
                     url,
                     title,
                     description,
-                    link_embedding
+                    link_embedding,
+                    image_url
                 )
                 VALUES (
                     SOURCE.link_id,
                     SOURCE.url,
                     SOURCE.title,
                     SOURCE.description,
-                    SOURCE.link_embedding
+                    SOURCE.link_embedding,
+                    SOURCE.image_url
                 );
             """
             result = cursor.execute(sql)
@@ -154,8 +156,51 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
             FROM LINKCHAIN.ANALYTICS.INTEGRATED_TABLE I
             LEFT JOIN LINKCHAIN.RAW_DATA.CRAWLED_HTML_METADATA M
             ON I.LINK_ID = M.LINK_ID
-            WHERE I.TITLE IS NULL AND I.DESCRIPTION IS NULL
+            WHERE I.TITLE IS NULL AND I.DESCRIPTION IS NULL AND I.IMAGE_URL IS NULL
                 AND M.S3_PATH IS NOT NULL;
             """
             result = cursor.execute(sql)
         return result.fetchall()
+
+    def merge_integrated_table_to_final_table(self):
+        """
+        integrated_table을 최종 테이블로 merge 합니다.
+        """
+        with self.get_conn() as conn:
+            cursor = conn.cursor()
+            sql = """
+            MERGE INTO LINKCHAIN.ANALYTICS.LINK_CLUSTERED AS target
+            USING (
+                SELECT
+                    I.LINK_ID,
+                    I.URL,
+                    I.TITLE,
+                    I.DESCRIPTION,
+                    L.CREATED_BY_USER_ID,
+                    L.CREATED_BY_USERNAME,
+                    L.CREATED_AT,
+                    I.LINK_EMBEDDING,
+                    I.IMAGE_URL
+                FROM ANALYTICS.INTEGRATED_TABLE I
+                INNER JOIN ODS.LINK L ON I.LINK_ID = L.LINK_ID
+            ) AS source
+            ON target.LINK_ID = source.LINK_ID
+            WHEN MATCHED THEN
+                UPDATE SET
+                    target.LINK_EMBEDDING = source.LINK_EMBEDDING,
+                    target.IMAGE_URL = source.IMAGE_URL,
+                    target.TITLE = source.TITLE,
+                    target.DESCRIPTION = source.DESCRIPTION
+            WHEN NOT MATCHED THEN
+                INSERT (
+                    LINK_ID, URL, TITLE, DESCRIPTION,
+                    CREATED_BY_USER_ID, CREATED_BY_USERNAME, CREATED_AT,
+                    LINK_EMBEDDING, IMAGE_URL
+                )
+                VALUES (
+                    source.LINK_ID, source.URL, source.TITLE, source.DESCRIPTION,
+                    source.CREATED_BY_USER_ID, source.CREATED_BY_USERNAME,
+                    source.CREATED_AT, source.LINK_EMBEDDING, source.IMAGE_URL
+                );"""
+            result = cursor.execute(sql)
+            return result.fetchone()
