@@ -70,10 +70,14 @@ def save_embeddings(**context):
     json_string = s3hook.download_bytes(tmp_key_path)
     link_id_with_embedding = json.loads(json_string)
 
+    formatted_data = []
+    for embedding, link_id in link_id_with_embedding:
+        formatted_data.append((json.dumps(embedding), link_id))
+
     sql = """
         UPDATE LINKCHAIN.ANALYTICS.INTEGRATED_TABLE
         SET
-            LINK_EMBEDDING = %s
+            LINK_EMBEDDING = PARSE_JSON(%s)::VECTOR(FLOAT, 768)
         WHERE
             LINK_ID = %s
     """
@@ -81,7 +85,7 @@ def save_embeddings(**context):
     start = time.time()
     with hook.get_conn() as conn:
         with conn.cursor() as cursor:
-            cursor.executemany(sql, link_id_with_embedding)
+            cursor.executemany(sql, formatted_data)
             updated_count = cursor.rowcount
             conn.commit()
             logger.info(f"Successfully updated {updated_count} rows.")
