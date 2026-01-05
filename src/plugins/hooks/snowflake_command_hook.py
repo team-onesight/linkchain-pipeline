@@ -183,6 +183,12 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
                 INNER JOIN ODS.LINK L ON I.LINK_ID = L.LINK_ID
             ) AS source
             ON target.LINK_ID = source.LINK_ID
+            WHEN MATCHED THEN
+                UPDATE SET
+                    target.LINK_EMBEDDING = source.LINK_EMBEDDING,
+                    target.IMAGE_URL = source.IMAGE_URL,
+                    target.TITLE = source.TITLE,
+                    target.DESCRIPTION = source.DESCRIPTION
             WHEN NOT MATCHED THEN
                 INSERT (
                     LINK_ID, URL, TITLE, DESCRIPTION,
