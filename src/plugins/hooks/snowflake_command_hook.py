@@ -157,7 +157,8 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
             LEFT JOIN LINKCHAIN.RAW_DATA.CRAWLED_HTML_METADATA M
             ON I.LINK_ID = M.LINK_ID
             WHERE I.TITLE IS NULL AND I.DESCRIPTION IS NULL AND I.IMAGE_URL IS NULL
-                AND M.S3_PATH IS NOT NULL;
+                AND M.S3_PATH IS NOT NULL
+            LIMIT 100;
             """
             result = cursor.execute(sql)
         return result.fetchall()

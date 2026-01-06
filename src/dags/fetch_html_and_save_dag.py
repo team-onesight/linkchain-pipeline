@@ -1,5 +1,5 @@
 from airflow.providers.standard.operators.empty import EmptyOperator
-from airflow.sdk import DAG, TriggerRule
+from airflow.sdk import DAG
 from cosmos import (
     DbtTaskGroup,
     ExecutionConfig,
@@ -51,7 +51,6 @@ with DAG(
         limit=100,
         s3_bucket_name="de7-team1",
         pool="html_fetcher_pool",
-        trigger_rule=TriggerRule.ALWAYS,
     )
 
     end = EmptyOperator(task_id="end")
