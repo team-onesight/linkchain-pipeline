@@ -7,7 +7,7 @@ docker ps -a -q --filter "name=airflow-webserver" --filter "name=airflow-init" |
 docker ps -a -q --filter "name=airflow-webserver" --filter "name=airflow-init" | xargs -r sudo docker rm || true
 
 echo "=== [2/3] Build Image (Cache Check) ==="
-docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod build webserver
+docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod --profile webserver build
 
 echo "=== [3/3] Start Airflow Webserver ==="
 docker-compose \

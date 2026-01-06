@@ -13,7 +13,7 @@ export SERVER_IP=$(hostname -I | awk '{print $1}')
 export AIRFLOW__CORE__HOSTNAME=$SERVER_IP
 
 echo "=== [2/3] Build Image (Cache Check) ==="
-docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod build worker
+docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod --profile worker build
 
 echo "=== [3/3] Start Worker with Fixed IP: $SERVER_IP ==="
 docker-compose \

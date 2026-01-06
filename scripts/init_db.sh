@@ -10,7 +10,7 @@ echo "=== [2/3] Rebuild Image from Scratch (No Cache) ==="
 docker-compose \
   -f ../docker-compose-prod.yaml \
   --env-file ../.env.prod \
-  build --no-cache airflow-init
+  --profile init build --no-cache
 
 echo "=== [3/3] Run Airflow Init (Migration & User Creation) ==="
 docker-compose \
