@@ -33,4 +33,4 @@ MERGE_LINK_SQL = """
         );
     """
 
-LINK_STAGING_COLUMNS = ["link_id", "url", "title", "description", "created_by_user_id", "created_by_username", "created_at", "link_embedding"] # noqa: E501
+LINK_STAGING_COLUMNS = ["link_id", "url", "title", "description", "created_by_user_id", "created_by_username", "created_at", "link_embedding", "image_url"] # noqa: E501
