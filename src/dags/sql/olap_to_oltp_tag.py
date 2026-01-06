@@ -1,12 +1,13 @@
 UPSERT_TAG_SQL = """
     INSERT INTO public.tag (tag_name, created_at)
-    SELECT DISTINCT
+    SELECT
         st.tag_name,
-        st.created_at
+        MIN(st.created_at) AS created_at
     FROM staging.tag st
     LEFT JOIN public.tag pt
-    ON pt.tag_name = st.tag_name
-    WHERE pt.tag_id IS NULL;
+        ON pt.tag_name = st.tag_name
+    WHERE pt.tag_id IS NULL
+    GROUP BY st.tag_name;
     """
 
 TAG_MAPPING_SQL = """
