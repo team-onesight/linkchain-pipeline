@@ -142,12 +142,12 @@ def update_to_integrated_table(**context) -> int:
         USING staging.integrated_table AS source
         ON target.LINK_ID = source.LINK_ID
         WHEN MATCHED
-            AND (target.TITLE IS NULL OR target.DESCRIPTION IS NULL OR target.IMAGE_URL IS NULL) # noqa: E501
+            AND (target.TITLE IS NULL OR target.DESCRIPTION IS NULL OR target.IMAGE_URL IS NULL) 
         THEN UPDATE SET
             TITLE = COALESCE(target.TITLE, source.TITLE),
             DESCRIPTION = COALESCE(target.DESCRIPTION, source.DESCRIPTION),
             IMAGE_URL = COALESCE(target.IMAGE_URL, source.IMAGE_URL)
-    """
+    """ # noqa: E501
 
     hook = SnowflakeCommandHook()
     start = time.time()
