@@ -7,7 +7,7 @@ docker ps -a -q --filter "name=airflow-triggerer" --filter "name=airflow-init" |
 docker ps -a -q --filter "name=airflow-triggerer" --filter "name=airflow-init" | xargs -r sudo docker rm || true
 
 echo "=== [2/3] Build Image (Cache Check) ==="
-docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod build triggerer
+docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod --profile triggerer build
 
 echo "=== [3/3] Start Airflow Triggerer ==="
 docker-compose \

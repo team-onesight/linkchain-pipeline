@@ -7,7 +7,7 @@ docker ps -a -q --filter "name=flower" | xargs -r sudo docker stop || true
 docker ps -a -q --filter "name=flower" | xargs -r sudo docker rm || true
 
 echo "=== [2/3] Build Image (Cache Check) ==="
-docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod build flower
+docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod --profile monitoring build
 
 echo "=== [3/3] Start Airflow Flower ==="
 docker-compose \
