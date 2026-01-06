@@ -6,7 +6,7 @@ MERGE_LINK_SQL = """
         UPDATE SET
             title = sl.title,
             description = sl.description,
-            link_embedding = sl.link_embedding
+            link_embedding = sl.link_embedding,
             image_url = sl.image_url
     WHEN NOT MATCHED THEN
         INSERT (
