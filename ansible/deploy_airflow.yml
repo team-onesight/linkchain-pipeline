@@ -46,11 +46,6 @@
     scripts_path: "{{ project_path }}/scripts"
 
   tasks:
-    - name: Clear Airflow Docker Containers
-      ansible.builtin.shell:
-        cmd: "sudo sh {{ scripts_path }}/clear_airflow_containers.sh"
-        chdir: "{{ project_path }}"
-
     - name: Run Webserver
       ansible.builtin.shell:
         cmd: "sudo sh {{ scripts_path }}/run_webserver.sh"

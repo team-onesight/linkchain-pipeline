@@ -2,17 +2,16 @@
 set -e
 cd "$(dirname "$0")"
 
+echo "=== [1/3] Stop & Remove Docker Containers (triggerer, init) ==="
+docker ps -a -q --filter "name=airflow-triggerer" --filter "name=airflow-init" | xargs -r sudo docker stop || true
+docker ps -a -q --filter "name=airflow-triggerer" --filter "name=airflow-init" | xargs -r sudo docker rm || true
 
-echo "=== Stop Docker Container (triggerer, init) ==="
-docker ps -a -q --filter "name=airflow-triggerer" \
---filter "name=airflow-init" | xargs -r sudo docker stop || true
-echo "=== Remove Docker Container (triggerer, init) ==="
-docker ps -a -q --filter "name=airflow-triggerer" \
---filter "name=airflow-init" | xargs -r sudo docker rm || true
+echo "=== [2/3] Build Image (Cache Check) ==="
+docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod build triggerer
 
-echo "=== Ensuring Airflow Triggerer is up and running ==="
+echo "=== [3/3] Start Airflow Triggerer ==="
 docker-compose \
   -f ../docker-compose-prod.yaml \
   --env-file ../.env.prod \
   --profile triggerer \
-  up -d --remove-orphans --build
+  up -d --remove-orphans --no-build
