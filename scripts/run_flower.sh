@@ -2,19 +2,16 @@
 set -e
 cd "$(dirname "$0")"
 
+echo "=== [1/3] Stop & Remove Docker Containers (flower) ==="
+docker ps -a -q --filter "name=flower" | xargs -r sudo docker stop || true
+docker ps -a -q --filter "name=flower" | xargs -r sudo docker rm || true
 
+echo "=== [2/3] Build Image (Cache Check) ==="
+docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod build flower
 
-echo "=== [Cleanup] Removing previous 'airflow-init' container ==="
-
-docker-compose \
-  -f ../docker-compose-prod.yaml \
-  --env-file ../.env.prod \
-  rm -f -s -v airflow-init
-
-
-echo "=== Ensuring Airflow Flower is up and running ==="
+echo "=== [3/3] Start Airflow Flower ==="
 docker-compose \
   -f ../docker-compose-prod.yaml \
   --env-file ../.env.prod \
   --profile monitoring \
-  up -d --remove-orphans --build
+  up -d --remove-orphans --no-build

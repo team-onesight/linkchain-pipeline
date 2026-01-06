@@ -123,11 +123,9 @@ def extract_image_url_from_html(html_text: str) -> Optional[str]:
     """
     HTML 문자열에서 대표 image URL을 추출하는 메소드
 
-    우선순위를 달리하여 순차적으로 og부터 단순 image_src까지 추출 시도 후 없으면 None 반환
+    우선순위를 달리하여 순차적으로 og 추출 시도 후 없으면 None 반환
     1. trafilatura.extract_metadata().image
     2. og:image (bs4 + lxml)
-    3. twitter:image
-    4. link[rel="image_src"]
 
     :param html_text: HTML 텍스트
     :return: image URL | None
@@ -149,14 +147,6 @@ def extract_image_url_from_html(html_text: str) -> Optional[str]:
     og_image = soup.find("meta", property="og:image")
     if og_image and og_image.get("content"):
         return og_image["content"].strip()
-
-    twitter_image = soup.find("meta", attrs={"name": "twitter:image"})
-    if twitter_image and twitter_image.get("content"):
-        return twitter_image["content"].strip()
-
-    link_image = soup.find("link", rel="image_src")
-    if link_image and link_image.get("href"):
-        return link_image["href"].strip()
 
     return None
 

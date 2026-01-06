@@ -123,20 +123,39 @@ def update_to_integrated_table(**context) -> int:
     json_string = s3hook.download_bytes(tmp_key_path)
     formatted_data = json.loads(json_string)
 
-    sql = """
-        UPDATE LINKCHAIN.ANALYTICS.INTEGRATED_TABLE
-        SET
-            TITLE = %s,
-            DESCRIPTION = %s,
-            IMAGE_URL = %s
-        WHERE
-            LINK_ID = %s
+    create_staging_sql = """
+        CREATE OR REPLACE TEMP TABLE staging.integrated_table (
+            LINK_ID VARCHAR(16777216) NOT NULL,
+            TITLE VARCHAR(16777216),
+            DESCRIPTION VARCHAR(16777216),
+            IMAGE_URL VARCHAR(16777216)
+        )
     """
+
+    insert_sql = """
+        INSERT INTO staging.integrated_table (LINK_ID, TITLE, DESCRIPTION, IMAGE_URL)
+        VALUES (%s, %s, %s, %s)
+    """
+
+    merge_sql = """
+        MERGE INTO analytics.analytics.integrated_table AS target
+        USING staging.integrated_table AS source
+        ON target.LINK_ID = source.LINK_ID
+        WHEN MATCHED
+            AND (target.TITLE IS NULL OR target.DESCRIPTION IS NULL OR target.IMAGE_URL IS NULL)
+        THEN UPDATE SET
+            TITLE = COALESCE(target.TITLE, source.TITLE),
+            DESCRIPTION = COALESCE(target.DESCRIPTION, source.DESCRIPTION),
+            IMAGE_URL = COALESCE(target.IMAGE_URL, source.IMAGE_URL)
+    """ # noqa: E501
+
     hook = SnowflakeCommandHook()
     start = time.time()
     with hook.get_conn() as conn:
         with conn.cursor() as cursor:
-            cursor.executemany(sql, formatted_data)
+            cursor.execute(create_staging_sql)
+            cursor.executemany(insert_sql, formatted_data)
+            cursor.execute(merge_sql)
             updated_count = cursor.rowcount
             conn.commit()
             logger.info(f"Successfully updated {updated_count} rows.")

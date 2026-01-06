@@ -2,16 +2,16 @@
 set -e
 cd "$(dirname "$0")"
 
-echo "=== [Cleanup] Removing previous 'airflow-init' container ==="
+echo "=== [1/3] Stop & Remove Docker Containers (dag-processor, init) ==="
+docker ps -a -q --filter "name=airflow-dag-processor" --filter "name=airflow-init" | xargs -r sudo docker stop || true
+docker ps -a -q --filter "name=airflow-dag-processor" --filter "name=airflow-init" | xargs -r sudo docker rm || true
 
-docker-compose \
-  -f ../docker-compose-prod.yaml \
-  --env-file ../.env.prod \
-  rm -f -s -v airflow-init
+echo "=== [2/3] Build Image (Cache Check) ==="
+docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod build dag-processor
 
-echo "=== Ensuring Airflow DAG Processor is up and running ==="
+echo "=== [3/3] Start Airflow DAG Processor ==="
 docker-compose \
   -f ../docker-compose-prod.yaml \
   --env-file ../.env.prod \
   --profile dag-processor \
-  up -d --remove-orphans --build
+  up -d --remove-orphans --no-build
