@@ -50,30 +50,40 @@
       ansible.builtin.shell:
         cmd: "sudo sh {{ scripts_path }}/run_webserver.sh"
         chdir: "{{ project_path }}"
+      async: 1200
+      poll: 10
       when: "'group_webserver' in group_names"
 
     - name: Run Scheduler
       ansible.builtin.shell:
         cmd: "sudo sh {{ scripts_path }}/run_scheduler.sh"
         chdir: "{{ project_path }}"
+      async: 1200
+      poll: 10
       when: "'group_scheduler' in group_names"
 
     - name: Run Worker
       ansible.builtin.shell:
         cmd: "sudo sh {{ scripts_path }}/run_worker.sh 8793"
         chdir: "{{ project_path }}"
+      async: 1200
+      poll: 10
       when: "'group_worker' in group_names"
 
     - name: Run DAG Processor
       ansible.builtin.shell:
         cmd: "sudo sh {{ scripts_path }}/run_dag_processor.sh"
         chdir: "{{ project_path }}"
+      async: 1200
+      poll: 10
       when: "'group_dagprocessor' in group_names"
 
     - name: Run Triggerer
       ansible.builtin.shell:
         cmd: "sudo sh {{ scripts_path }}/run_triggerer.sh"
         chdir: "{{ project_path }}"
+      async: 1200
+      poll: 10
       when: "'group_trigger' in group_names"
 
 #    - name: Run Flower

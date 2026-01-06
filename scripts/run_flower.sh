@@ -3,6 +3,8 @@ set -e
 cd "$(dirname "$0")"
 
 echo "=== [1/3] Stop & Remove Docker Containers (flower) ==="
+docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod --profile monitoring down --remove-orphans || true
+
 docker ps -a -q --filter "name=flower" | xargs -r sudo docker stop || true
 docker ps -a -q --filter "name=flower" | xargs -r sudo docker rm || true
 
@@ -14,4 +16,4 @@ docker-compose \
   -f ../docker-compose-prod.yaml \
   --env-file ../.env.prod \
   --profile monitoring \
-  up -d --remove-orphans --no-build
+  up -d --force-recreate --always-recreate-deps --no-build
