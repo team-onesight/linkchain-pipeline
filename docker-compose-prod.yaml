@@ -3,6 +3,7 @@ version: '3.9'
 x-airflow-common:
   &airflow-common
   build: .
+  image: linkchain-airflow:latest
   env_file:
     - .env.prod
   environment:
