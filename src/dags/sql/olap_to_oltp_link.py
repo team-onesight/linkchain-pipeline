@@ -6,7 +6,8 @@ MERGE_LINK_SQL = """
         UPDATE SET
             title = sl.title,
             description = sl.description,
-            link_embedding = sl.link_embedding
+            link_embedding = sl.link_embedding,
+            image_url = sl.image_url
     WHEN NOT MATCHED THEN
         INSERT (
             link_id,
@@ -16,7 +17,8 @@ MERGE_LINK_SQL = """
             created_by_user_id,
             created_by_username,
             created_at,
-            link_embedding
+            link_embedding,
+            image_url
         )
         VALUES (
             sl.link_id,
@@ -26,7 +28,8 @@ MERGE_LINK_SQL = """
             sl.created_by_user_id,
             sl.created_by_username,
             sl.created_at,
-            sl.link_embedding
+            sl.link_embedding,
+            sl.image_url
         );
     """
 

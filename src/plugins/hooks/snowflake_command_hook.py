@@ -183,7 +183,7 @@ class SnowflakeCommandHook(CustomSnowflakeBaseHook):
                     I.LINK_EMBEDDING,
                     I.IMAGE_URL
                 FROM ANALYTICS.INTEGRATED_TABLE I
-                INNER JOIN ODS.LINK L ON I.LINK_ID = L.LINK_ID
+                LEFT JOIN ODS.LINK L ON I.LINK_ID = L.LINK_ID
             ) AS source
             ON target.LINK_ID = source.LINK_ID
             WHEN MATCHED THEN
