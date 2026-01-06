@@ -234,4 +234,5 @@ def generate_multilang_tags(
         tags_col.append(tag_set)
 
     df["tags"] = tags_col
+    df = df[df['tags'].map(len) > 0]
     return df
