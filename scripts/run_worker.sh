@@ -4,7 +4,7 @@ cd "$(dirname "$0")"
 
 SERVICE_NAME="airflow-worker"
 
-echo "=== [1/3] Stop & Remove Specific Container ($SERVICE_NAME) ==="
+echo "=== [1/2] Stop & Remove Specific Container ($SERVICE_NAME) ==="
 docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod stop $SERVICE_NAME || true
 docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod rm -f $SERVICE_NAME || true
 
@@ -15,10 +15,7 @@ export WORKER_PORT=${1:-8793}
 export SERVER_IP=$(hostname -I | awk '{print $1}')
 export AIRFLOW__CORE__HOSTNAME=$SERVER_IP
 
-echo "=== [2/3] Build Image (Cache Check) ==="
-docker-compose -f ../docker-compose-prod.yaml --env-file ../.env.prod build $SERVICE_NAME
-
-echo "=== [3/3] Start Worker with Fixed IP: $SERVER_IP ==="
+echo "=== [2/2] Start Worker with Fixed IP: $SERVER_IP ==="
 docker-compose \
   -f ../docker-compose-prod.yaml \
   --env-file ../.env.prod \

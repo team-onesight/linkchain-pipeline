@@ -37,6 +37,27 @@
         force: yes
         accept_hostkey: yes
 
+- name: "Step 1c: Global Build & Cleanup"
+  hosts: group_airflow
+  become: yes
+  become_user: ubuntu
+  vars:
+    project_path: "/home/ubuntu/linkchain-pipeline"
+
+  tasks:
+    - name: Build Docker Image Globally
+      ansible.builtin.shell:
+        cmd: "sudo docker compose -f docker-compose-prod.yaml --env-file .env.prod build"
+        chdir: "{{ project_path }}"
+      environment:
+        WORKER_PORT: "8793"
+      ignore_errors: no
+
+    - name: Prune Dangling Images
+      ansible.builtin.shell:
+        cmd: "sudo docker image prune -f"
+      ignore_errors: yes
+
 - name: "Step 2: Start Airflow Components"
   hosts: group_airflow
   become: yes
@@ -85,9 +106,3 @@
       async: 1200
       poll: 10
       when: "'group_trigger' in group_names"
-
-#    - name: Run Flower
-#      ansible.builtin.shell:
-#        cmd: "sh {{ scripts_path }}/run_flower.sh"
-#        chdir: "{{ project_path }}"
-#      when: "'group_webserver' in group_names"
